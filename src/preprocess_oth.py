@@ -8,11 +8,20 @@ import pandas as pd
 
 from rdkit import Chem
 # ignore the warning
-from rdkit import RDLogger 
+from rdkit.Chem import Descriptors
+from rdkit import RDLogger
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.model_selection import train_test_split
+from molnetpack import conformation_array, filter_mol, check_atom
+from tqdm import tqdm
+
 RDLogger.DisableLog('rdApp.*')
 
-from molnetpack import conformation_array, filter_mol, check_atom
 
+def check_valid_smiles(smiles):
+	"""Check if the SMILES string represents a valid molecule."""
+	mol = Chem.MolFromSmiles(smiles)
+	return mol is not None
 
 
 def random_split(suppl, smiles_list, test_ratio=0.1):
@@ -83,6 +92,57 @@ def df2arr(df, encoder):
 
 		data.append({'title': row['AllCCS ID']+'_'+str(idx), 'mol': mol_arr, 'ccs': np.array([row['CCS']]).astype(np.float64), 'env': env_arr})
 	return data
+
+def csv2arr(df, encoder):
+	'''
+	    Converts a DataFrame containing SMILES, labels, and molecular descriptors into structured NumPy arrays.
+
+	    Output format:
+	    [
+	        {'title': <str>, 'mol': <numpy array>, 'features': <numpy array>, 'label': <int>},
+	        {'title': <str>, 'mol': <numpy array>, 'features': <numpy array>, 'label': <int>},
+	        ...
+	    ]
+	'''
+	data = []
+
+	for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
+		# Extract SMILES and label
+		smiles = row['smiles']
+		label = int(row['labels'])
+
+		# Generate molecular conformation
+		good_conf, xyz_arr, atom_type = conformation_array(smiles=smiles, conf_type=encoder['conf_type'])
+
+		# Skip molecules that couldn't generate valid conformations
+		if not good_conf:
+			continue
+
+		# Convert atom types to one-hot encoding
+		atom_type_one_hot = np.array([encoder['atom_type'][atom] for atom in atom_type])
+		assert xyz_arr.shape[0] == atom_type_one_hot.shape[0]
+
+		# Merge atomic coordinates with atom encoding
+		mol_arr = np.concatenate([xyz_arr, atom_type_one_hot], axis=1)
+
+		# Pad molecules to a fixed number of atoms
+		mol_arr = np.pad(mol_arr, ((0, encoder['max_atom_num'] - xyz_arr.shape[0]), (0, 0)), constant_values=0)
+
+		# Extract numerical feature columns
+		feature_values = row.iloc[2:].values.astype(np.float64)  # Exclude 'labels' and 'smiles' columns
+
+		# Store in the structured format
+		data.append({
+			'title': f"Mol_{idx}",  # Unique molecule ID
+			'mol': mol_arr,  # Molecular representation
+			'features': feature_values,  # Molecular descriptors/features
+			'label': label  # Classification label
+		})
+
+	return data
+
+
+
 	
 
 
@@ -92,7 +152,7 @@ if __name__ == "__main__":
 						help='path to raw data')
 	parser.add_argument('--pkl_dir', type=str, default='./data/',
 						help='path to pkl data')
-	parser.add_argument('--dataset', type=str, nargs='+', required=True, choices=['metlin', 'allccs'], 
+	parser.add_argument('--dataset', type=str, nargs='+', required=True, choices=['metlin', 'allccs', 'cardio_toxicity'],
 						help='dataset name')
 	parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
 						help='path to configuration')
@@ -102,6 +162,8 @@ if __name__ == "__main__":
 		assert os.path.exists(os.path.join(args.raw_dir, 'SMRT_dataset.sdf'))
 	if 'allccs' in args.dataset:
 		assert os.path.exists(os.path.join(args.raw_dir, 'allccs_download.csv'))
+	if 'cardio_toxicity' in args.dataset:
+		assert os.path.exists(os.path.join(args.raw_dir, 'cardio_toxicity.csv'))
 	
 	# load the configurations
 	with open(args.data_config_path, 'r') as f: 
@@ -172,3 +234,36 @@ if __name__ == "__main__":
 		with open(out_path, 'wb') as f: 
 			pickle.dump(train_data, f)
 			print('Save {}'.format(out_path))
+
+	if 'cardio_toxicity' in args.dataset:
+		print('\n>>> Step 1: load the dataset;')
+		df = pd.read_csv(os.path.join(args.raw_dir, 'cardio_toxicity.csv'))
+		df = df.dropna(subset=['smiles', 'labels'])
+		print('Load {} data from Cardio-Toxicity Dataset...'.format(len(df)))
+
+		print('\n>>> Step 2: filter out invalid molecules; randomly split SMILES into training and test sets;')
+		df['valid'] = df['smiles'].apply(lambda x: check_atom(x, config['cardio_toxicity'], in_type='smiles')) #filter out the compounds
+		df = df[df['valid'] == True]
+
+		test_ratio = 0.1
+		df = df.sample(frac=1).reset_index(drop=True)  # Shuffle dataset
+		test_size = int(len(df) * test_ratio)
+		test_df = df.iloc[:test_size]
+		train_df = df.iloc[test_size:]
+		print('Get {} test data and {} training data'.format(len(test_df), len(train_df)))
+
+		print('\n>>> Step 3: encode all the data into pkl format;')
+		test_data = csv2arr(test_df, config['encoding'])
+		out_path = os.path.join(args.pkl_dir, 'cardio_toxicity_{}_test.pkl'.format(config['encoding']['conf_type']))
+		with open(out_path, 'wb') as f:
+			pickle.dump(test_data, f)
+			print('Save {}'.format(out_path))
+
+		train_data = csv2arr(train_df, config['encoding'])
+		out_path = os.path.join(args.pkl_dir, 'cardio_toxicity_{}_train.pkl'.format(config['encoding']['conf_type']))
+		with open(out_path, 'wb') as f:
+			pickle.dump(train_data, f)
+			print('Save {}'.format(out_path))
+
+
+

@@ -122,6 +122,11 @@ gnps_orbitrap:
   max_atom_num: 300
   min_atom_num: 10
   ppm_tolerance: 5
+  # cardio_toxicity ===============================================================
+cardio_toxicity:
+    atom_type: [ 'C', 'O', 'N', 'H', 'P', 'S', 'F', 'Cl', 'B', 'Br', 'I' ]
+    max_atom_num: 300
+    min_atom_num: 10
 
 # retention time ===============================================================
 metlin_rt:

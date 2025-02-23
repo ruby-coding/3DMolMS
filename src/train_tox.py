@@ -15,7 +15,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from molnetpack import MolNet_Oth
-from molnetpack import MolRT_Dataset
+from molnetpack import MolTox_Dataset
+
 
 def get_lr(optimizer):
 	for param_group in optimizer.param_groups:
@@ -25,8 +26,10 @@ def train_step(model, device, loader, optimizer, batch_size, num_points):
 	accuracy = 0
 	with tqdm(total=len(loader)) as bar:
 		for step, batch in enumerate(loader):
-			_, x, y = batch
+			print(f"Batch structure: {len(batch)}")
+			_, x, features, y = batch
 			x = x.to(device=device, dtype=torch.float)
+			print(x.size())
 			x = x.permute(0, 2, 1)
 			y = y.to(device=device, dtype=torch.float)
 			idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
@@ -46,12 +49,12 @@ def train_step(model, device, loader, optimizer, batch_size, num_points):
 			accuracy += torch.abs(pred - y).mean().item()
 	return accuracy / (step + 1)
 
-def eval_step(model, device, loader, batch_size, num_points):
+def eval_step(model: nn.Module, device, loader, batch_size, num_points):
 	model.eval()
 	accuracy = 0
 	with tqdm(total=len(loader)) as bar:
 		for step, batch in enumerate(loader):
-			_, x, y = batch
+			_, x, features, y = batch
 			x = x.to(device=device, dtype=torch.float)
 			x = x.permute(0, 2, 1)
 			y = y.to(device=device, dtype=torch.float)
@@ -83,9 +86,9 @@ def init_random_seed(seed):
 
 if __name__ == "__main__": 
 	parser = argparse.ArgumentParser(description='Molecular Retention Time Prediction (Train)')
-	parser.add_argument('--train_data', type=str, default='./data/metlin_etkdgv3_train.pkl',
+	parser.add_argument('--train_data', type=str, default='./data/cardio_toxicity_etkdgv3_train.pkl',
 						help='path to training data (pkl)')
-	parser.add_argument('--test_data', type=str, default='./data/metlin_etkdgv3_test.pkl',
+	parser.add_argument('--test_data', type=str, default='./data/cardio_toxicity_etkdgv3_test.pkl',
 						help='path to test data (pkl)')
 	parser.add_argument('--model_config_path', type=str, default='./src/molnetpack/config/molnet_rt.yml',
 						help='path to model and training configuration')
@@ -116,14 +119,14 @@ if __name__ == "__main__":
 	assert config['model']['batch_size'] == config['train']['batch_size'], "Batch size should be the same in model and training configuration"
 	
 	# 1. Data
-	train_set = MolRT_Dataset(args.train_data)
+	train_set = MolTox_Dataset(args.train_data)
 	train_loader = DataLoader(
 					train_set,
 					batch_size=config['train']['batch_size'], 
 					shuffle=True, 
 					num_workers=config['train']['num_workers'], 
 					drop_last=True)
-	valid_set = MolRT_Dataset(args.test_data)
+	valid_set = MolTox_Dataset(args.test_data)
 	valid_loader = DataLoader(
 					valid_set,
 					batch_size=config['train']['batch_size'], 
@@ -199,3 +202,9 @@ if __name__ == "__main__":
 		print('Export the model...')
 		model_scripted = torch.jit.script(model) # Export to TorchScript
 		model_scripted.save(args.ex_model_path) # Save
+
+# python ./src/train_rt.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
+# --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
+# --model_config_path ./src/molnetpack/config/molnet_rt.yml \
+# --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
+# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt
