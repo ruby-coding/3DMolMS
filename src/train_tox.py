@@ -223,12 +223,12 @@ if __name__ == "__main__":
 
 
 
-        if valid_accuracy > best_valid_accuracy:
+        if valid_accuracy < best_valid_accuracy:
             best_valid_accuracy = valid_accuracy
 
             if args.checkpoint_path != '':
                 print('Saving checkpoint...')
-                checkpoint = {'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'scheduler_state_dict': scheduler.state_dict(), 'best_val_acc': best_valid_accuracy, 'num_params': num_params}
+                checkpoint = {'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'scheduler_state_dict': scheduler.state_dict(), 'best_val_mae': best_valid_accuracy, 'num_params': num_params}
                 torch.save(checkpoint, args.checkpoint_path)
 
             early_stop_patience = 0
@@ -251,20 +251,9 @@ if __name__ == "__main__":
         model_scripted.save(args.ex_model_path) # Save
 
 
-# Resume Training from checkpoint
-# checkpoint = torch.load(args.checkpoint_path)
-# model.load_state_dict(checkpoint['model_state_dict'])
-# optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-# scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-# epoch = checkpoint['epoch']
-
-# Load TorchScript Model for Evaluation
-# model = torch.jit.load(args.ex_model_path)
-# model.eval()
-
-
 # python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
 # --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
 # --model_config_path ./src/molnetpack/config/molnet_rt.yml \
 # --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
-# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt
+# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
+# --ex_model_path ./check_point/
