@@ -14,40 +14,75 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from molnetpack import MolNet_Oth
+from molnetpack import MolNet_tox
 from molnetpack import MolTox_Dataset
 
 
 def get_lr(optimizer):
 	for param_group in optimizer.param_groups:
 		return param_group['lr']
-
+        
 def train_step(model, device, loader, optimizer, batch_size, num_points): 
-	accuracy = 0
-	with tqdm(total=len(loader)) as bar:
-		for step, batch in enumerate(loader):
-			print(f"Batch structure: {len(batch)}")
-			_, x, features, y = batch
-			x = x.to(device=device, dtype=torch.float)
-			print(x.size())
-			x = x.permute(0, 2, 1)
-			y = y.to(device=device, dtype=torch.float)
-			idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
+    accuracy = 0
+    with tqdm(total=len(loader)) as bar:
+        for step, batch in enumerate(loader):
+            print(f"Batch structure: {len(batch)}")
+            _, x, features, y = batch
+            x = x.to(device=device, dtype=torch.float)
+            print(x.size())
+            x = x.permute(0, 2, 1)
+            y = y.to(device=device, dtype=torch.float).view(-1, 1)  # Ensure shape is [batch_size, 1]
+            
+            idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
-			optimizer.zero_grad()
-			model.train()
-			pred = model(x, None, idx_base) 
-			loss = nn.MSELoss()(pred, y)
-			loss.backward()
+            optimizer.zero_grad()
+            model.train()
+            pred = model(x, None, idx_base)  # `pred` should be logits, not probabilities
+            
+            # Use BCEWithLogitsLoss for numerical stability
+            loss_fn = nn.BCEWithLogitsLoss()
+            loss = loss_fn(pred, y)  
 
-			bar.set_description('Train')
-			bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
-			bar.update(1)
+            loss.backward()
+            optimizer.step()
 
-			optimizer.step()
+            # Convert logits to probabilities for accuracy calculation
+            pred_binary = torch.sigmoid(pred).round()  # Converts logits to 0 or 1
+            accuracy += (pred_binary == y).float().mean().item()  # Compute accuracy
 
-			accuracy += torch.abs(pred - y).mean().item()
-	return accuracy / (step + 1)
+            bar.set_description('Train')
+            bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
+            bar.update(1)
+
+    return accuracy / (step + 1)  # Return average accuracy over all batches
+
+# def train_step(model, device, loader, optimizer, batch_size, num_points): 
+# 	accuracy = 0
+# 	with tqdm(total=len(loader)) as bar:
+# 		for step, batch in enumerate(loader):
+# 			print(f"Batch structure: {len(batch)}")
+# 			_, x, features, y = batch
+# 			x = x.to(device=device, dtype=torch.float)
+# 			print(x.size())
+# 			x = x.permute(0, 2, 1)
+# 			y = y.to(device=device, dtype=torch.float)
+# 			idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
+
+# 			optimizer.zero_grad()
+# 			model.train()
+# 			pred = model(x, None, idx_base) 
+# 			loss_fn = nn.BCEWithLogitsLoss()
+#             loss = loss_fn(pred, y.float())  # Ensure y is float type
+# 			loss.backward()
+
+# 			bar.set_description('Train')
+# 			bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
+# 			bar.update(1)
+
+# 			optimizer.step()
+
+# 			accuracy += torch.abs(pred - y).mean().item()
+# 	return accuracy / (step + 1)
 
 def eval_step(model: nn.Module, device, loader, batch_size, num_points):
 	model.eval()
@@ -66,7 +101,7 @@ def eval_step(model: nn.Module, device, loader, batch_size, num_points):
 			bar.set_description('Eval')
 			bar.update(1)
 
-			accuracy += torch.abs(pred - y).mean().item()
+			accuracy += torch.abs(pred - y).mean().item() #Change matrix to match classification 
 	return accuracy / (step + 1)
 
 def init_random_seed(seed):
@@ -203,7 +238,7 @@ if __name__ == "__main__":
 		model_scripted = torch.jit.script(model) # Export to TorchScript
 		model_scripted.save(args.ex_model_path) # Save
 
-# python ./src/train_rt.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
+# python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
 # --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
 # --model_config_path ./src/molnetpack/config/molnet_rt.yml \
 # --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
