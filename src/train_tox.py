@@ -173,7 +173,7 @@ if __name__ == "__main__":
 	device = torch.device("cuda:" + str(args.device)) if torch.cuda.is_available() and not args.no_cuda else torch.device("cpu")
 	print(f'Device: {device}')
 
-	model = MolNet_Oth(config['model']).to(device)
+	model = MolNet_tox(config['model']).to(device)
 	num_params = sum(p.numel() for p in model.parameters())
 	print(f'{str(model)} #Params: {num_params}')
 
