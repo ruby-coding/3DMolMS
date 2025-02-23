@@ -210,7 +210,7 @@ if __name__ == "__main__":
         checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
         os.makedirs(checkpoint_dir, exist_ok = True)
 
-    best_valid_accuracy = 999999
+    best_valid_accuracy = 0
     early_stop_step = 30
     early_stop_patience = 0
     for epoch in range(1, config['train']['epochs'] + 1):
@@ -249,6 +249,19 @@ if __name__ == "__main__":
         print('Export the model...')
         model_scripted = torch.jit.script(model) # Export to TorchScript
         model_scripted.save(args.ex_model_path) # Save
+
+
+# Resume Training from checkpoint
+# checkpoint = torch.load(args.checkpoint_path)
+# model.load_state_dict(checkpoint['model_state_dict'])
+# optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+# scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+# epoch = checkpoint['epoch']
+
+# Load TorchScript Model for Evaluation
+# model = torch.jit.load(args.ex_model_path)
+# model.eval()
+
 
 # python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
 # --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
