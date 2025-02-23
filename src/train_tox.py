@@ -239,7 +239,7 @@ if __name__ == "__main__":
 
         # scheduler.step()
         scheduler.step(valid_accuracy) # ReduceLROnPlateau
-        print(f'Best MAE so far: {best_valid_accuracy}')
+        print(f'Best accuracy so far: {best_valid_accuracy}')
 
         if early_stop_patience == early_stop_step:
             print('Early stop!')
