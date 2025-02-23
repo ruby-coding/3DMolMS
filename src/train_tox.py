@@ -223,12 +223,12 @@ if __name__ == "__main__":
 
 
 
-        if valid_accuracy < best_valid_accuracy:
+        if valid_accuracy > best_valid_accuracy:
             best_valid_accuracy = valid_accuracy
 
             if args.checkpoint_path != '':
                 print('Saving checkpoint...')
-                checkpoint = {'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'scheduler_state_dict': scheduler.state_dict(), 'best_val_mae': best_valid_accuracy, 'num_params': num_params}
+                checkpoint = {'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'scheduler_state_dict': scheduler.state_dict(), 'best_val_acc': best_valid_accuracy, 'num_params': num_params}
                 torch.save(checkpoint, args.checkpoint_path)
 
             early_stop_patience = 0
