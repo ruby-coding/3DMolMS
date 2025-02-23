@@ -1,0 +1,58 @@
+nohup: ignoring input
+  0%|          | 0/189 [00:00<?, ?it/s]  0%|          | 0/189 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/kimrubi/3DMolMS/./src/train_tox_SMOTE.py", line 418, in <module>
+    train_accuracy, train_loss = train_step(model, device, train_loader, optimizer,
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/3DMolMS/./src/train_tox_SMOTE.py", line 62, in train_step
+    pred = model(x, None, idx_base)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/3DMolMS/src/molnetpack/model.py", line 495, in forward
+    x = self.encoder(x, idx_base)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/3DMolMS/src/molnetpack/model.py", line 260, in forward
+    tmp_x = hidden_layer(xs[-1], idx_base)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/3DMolMS/src/molnetpack/model.py", line 161, in forward
+    feat = self.update_ff(feat)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/container.py", line 250, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/modules/activation.py", line 828, in forward
+    return F.leaky_relu(input, self.negative_slope, self.inplace)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kimrubi/miniconda3/lib/python3.12/site-packages/torch/nn/functional.py", line 1902, in leaky_relu
+    result = torch._C._nn.leaky_relu(input, negative_slope)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 188.00 MiB. GPU 0 has a total capacity of 10.57 GiB of which 105.06 MiB is free. Process 2470629 has 4.66 GiB memory in use. Process 3598769 has 3.55 GiB memory in use. Including non-PyTorch memory, this process has 2.25 GiB memory in use. Of the allocated memory 2.01 GiB is allocated by PyTorch, and 55.47 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

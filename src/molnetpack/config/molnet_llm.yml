@@ -1,0 +1,15 @@
+model:
+  input_dim: 2048
+  hidden_dims: [64, 64, 128, 256, 512, 1024, 1024, 512, 256, 128, 32]
+  dropout: 0.2
+
+
+train:
+  epochs: 300
+  batch_size: 32
+  num_workers: 0
+  lr: 0.00001
+
+test:
+  local_path: './check_point/molnet_rt_etkdgv3_tl.pt'
+  github_release_url: 'https://github.com/JosieHong/3DMolMS/releases/download/v1.1.8/molnet_rt_etkdgv3_tl.zip'

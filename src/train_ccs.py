@@ -31,19 +31,19 @@ def train_step(model, device, loader, optimizer, batch_size, num_points):
 
 			optimizer.zero_grad()
 			model.train()
-			pred = model(x, mask, env, idx_base) 
+			pred = model(x, mask, env, idx_base)
 			loss = nn.MSELoss()(pred, y)
 			loss.backward()
 
 			current_mae = torch.abs(pred - y).mean().item()
-			
+
 			# Update the progress bar with both loss and MAE
 			bar.set_description('Train')
 			bar.set_postfix(lr=get_lr(optimizer), loss=f"{loss.item():.4f}", mae=f"{current_mae:.4f}")
 			bar.update(1)
 
 			optimizer.step()
-			
+
 			# Accumulate MAE for final average
 			mae += current_mae
 	return mae / (step + 1)
@@ -62,7 +62,7 @@ def eval_step(model, device, loader, batch_size, num_points):
 			env = env.to(device=device, dtype=torch.float)
 
 			with torch.no_grad(): 
-				pred = model(x, mask, env, idx_base) 
+				pred = model(x, mask, env, idx_base)
 				
 			bar.set_description('Eval')
 			bar.update(1)
@@ -153,7 +153,7 @@ if __name__ == "__main__":
 		model.load_state_dict(torch.load(args.resume_path, map_location=device, weights_only=True)['model_state_dict'])
 		optimizer.load_state_dict(torch.load(args.resume_path, map_location=device, weights_only=True)['optimizer_state_dict'])
 		scheduler.load_state_dict(torch.load(args.resume_path, map_location=device, weights_only=True)['scheduler_state_dict'])
-		best_valid_mae = torch.load(args.resume_path, weights_only=True)['best_val_mae'] 
+		best_valid_mae = torch.load(args.resume_path, weights_only=True)['best_val_mae']
 
 	if args.checkpoint_path != '':
 		checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
@@ -175,13 +175,13 @@ if __name__ == "__main__":
 
 			if args.checkpoint_path != '':
 				print('Saving checkpoint...')
-				checkpoint = {'version': __version__, 
-								'epoch': epoch, 
-								'model_state_dict': model.state_dict(), 
-								'optimizer_state_dict': optimizer.state_dict(), 
-								'scheduler_state_dict': scheduler.state_dict(), 
-								'best_val_mae': best_valid_mae, 
-								'num_params': num_params, 
+				checkpoint = {'version': __version__,
+								'epoch': epoch,
+								'model_state_dict': model.state_dict(),
+								'optimizer_state_dict': optimizer.state_dict(),
+								'scheduler_state_dict': scheduler.state_dict(),
+								'best_val_mae': best_valid_mae,
+								'num_params': num_params,
 							}
 				torch.save(checkpoint, args.checkpoint_path)
 

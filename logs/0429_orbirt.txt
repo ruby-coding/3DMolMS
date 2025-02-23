@@ -1,0 +1,546 @@
+Load the model & training configuration from ./src/molnetpack/config/molnet_rt.yml
+Load 3916 data from ./data/(1)increase_mitochondrial_dysfunction_etkdgv3_train.pkl
+Load 3916 data from ./data/(1)increase_mitochondrial_dysfunction_etkdgv3_train.pkl
+Load 978 data from ./data/(1)increase_mitochondrial_dysfunction_etkdgv3_test.pkl
+Device: cuda:0
+MolnetTox_bin(
+  (encoder): Encoder(
+    (hidden_layers): ModuleList(
+      (0): MolConv2 k = 5 (21 -> 64)
+      (1): MolConv2 k = 5 (64 -> 64)
+      (2): MolConv2 k = 5 (64 -> 128)
+      (3): MolConv2 k = 5 (128 -> 256)
+      (4): MolConv2 k = 5 (256 -> 512)
+      (5): MolConv2 k = 5 (512 -> 1024)
+    )
+    (conv): Sequential(
+      (0): Conv1d(2048, 2048, kernel_size=(1,), stride=(1,), bias=False)
+      (1): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): LeakyReLU(negative_slope=0.2)
+    )
+    (merge): Sequential(
+      (0): Linear(in_features=4096, out_features=2048, bias=True)
+      (1): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): LeakyReLU(negative_slope=0.2)
+    )
+  )
+  (decoder): MSDecoder(
+    (blocks): ModuleList(
+      (0): FCResBlock (2048 -> 1024)
+      (1): FCResBlock (1024 -> 512)
+      (2): FCResBlock (512 -> 256)
+      (3): FCResBlock (256 -> 128)
+      (4): FCResBlock (128 -> 32)
+    )
+    (fc): Linear(in_features=32, out_features=3, bias=True)
+  )
+  (classifier): Linear(in_features=3, out_features=1, bias=True)
+) #Params: 19257527
+Load the pretrained encoder (freeze the encoder)...
+
+=====Epoch 1
+Train: Accuracy: 0.5795304232804233, Loss: 5.66066660325994 
+Validation: Accuracy: 0.684375, Loss: 1.8489955325921377
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 1.8489955325921377
+
+=====Epoch 2
+Train: Accuracy: 0.6603835978835979, Loss: 2.462934762081772 
+Validation: Accuracy: 0.69375, Loss: 1.276244463523229
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 1.276244463523229
+
+=====Epoch 3
+Train: Accuracy: 0.6944444444444444, Loss: 1.7759775208733068 
+Validation: Accuracy: 0.6875, Loss: 1.1833092590173087
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 1.1833092590173087
+
+=====Epoch 4
+Train: Accuracy: 0.7161044973544973, Loss: 1.4327536783521138 
+Validation: Accuracy: 0.7114583333333333, Loss: 1.0312406182289124
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 1.0312406182289124
+
+=====Epoch 5
+Train: Accuracy: 0.7390873015873016, Loss: 1.2352258414818496 
+Validation: Accuracy: 0.7125, Loss: 0.9198530624310176
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.9198530624310176
+
+=====Epoch 6
+Train: Accuracy: 0.7561177248677249, Loss: 1.0795918484686544 
+Validation: Accuracy: 0.7322916666666667, Loss: 0.8740517785151799
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.8740517785151799
+
+=====Epoch 7
+Train: Accuracy: 0.763558201058201, Loss: 0.9660857252816044 
+Validation: Accuracy: 0.7302083333333333, Loss: 0.8434197882811229
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.8434197882811229
+
+=====Epoch 8
+Train: Accuracy: 0.7721560846560847, Loss: 0.8780289518612402 
+Validation: Accuracy: 0.7375, Loss: 0.8322567651669185
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.8322567651669185
+
+=====Epoch 9
+Train: Accuracy: 0.7875330687830688, Loss: 0.7405825340085559 
+Validation: Accuracy: 0.721875, Loss: 0.8187935262918472
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.8187935262918472
+
+=====Epoch 10
+Train: Accuracy: 0.8017526455026455, Loss: 0.7020455243647414 
+Validation: Accuracy: 0.7395833333333334, Loss: 0.760119758049647
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.760119758049647
+
+=====Epoch 11
+Train: Accuracy: 0.8072089947089947, Loss: 0.6440066867089146 
+Validation: Accuracy: 0.740625, Loss: 0.739277712504069
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.739277712504069
+
+=====Epoch 12
+Train: Accuracy: 0.80869708994709, Loss: 0.6118394690688955 
+Validation: Accuracy: 0.7572916666666667, Loss: 0.7308475911617279
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.7308475911617279
+
+=====Epoch 13
+Train: Accuracy: 0.814318783068783, Loss: 0.5654194571038402 
+Validation: Accuracy: 0.7604166666666666, Loss: 0.7269902557134629
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.7269902557134629
+
+=====Epoch 14
+Train: Accuracy: 0.8194444444444444, Loss: 0.575202975165907 
+Validation: Accuracy: 0.7458333333333333, Loss: 0.7401599278052647
+Validation loss did not improve (current: 0.7402, best: 0.7270) — 1/30 early stop patience used
+Best loss so far: 0.7269902557134629
+
+=====Epoch 15
+Train: Accuracy: 0.8186177248677249, Loss: 0.5566376813110852 
+Validation: Accuracy: 0.7572916666666667, Loss: 0.7242280920346578
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.7242280920346578
+
+=====Epoch 16
+Train: Accuracy: 0.8277116402116402, Loss: 0.5238986291267254 
+Validation: Accuracy: 0.7416666666666667, Loss: 0.7161914721131325
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.7161914721131325
+
+=====Epoch 17
+Train: Accuracy: 0.8348214285714286, Loss: 0.4764423543813998 
+Validation: Accuracy: 0.75, Loss: 0.7198882867892583
+Validation loss did not improve (current: 0.7199, best: 0.7162) — 1/30 early stop patience used
+Best loss so far: 0.7161914721131325
+
+=====Epoch 18
+Train: Accuracy: 0.8296957671957672, Loss: 0.48816943744187635 
+Validation: Accuracy: 0.75, Loss: 0.7246643553177515
+Validation loss did not improve (current: 0.7247, best: 0.7162) — 2/30 early stop patience used
+Best loss so far: 0.7161914721131325
+
+=====Epoch 19
+Train: Accuracy: 0.8354828042328042, Loss: 0.4604227342223995 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.7242693285147349
+Validation loss did not improve (current: 0.7243, best: 0.7162) — 3/30 early stop patience used
+Best loss so far: 0.7161914721131325
+
+=====Epoch 20
+Train: Accuracy: 0.8386243386243386, Loss: 0.4465704334397165 
+Validation: Accuracy: 0.759375, Loss: 0.7227460662523906
+Validation loss did not improve (current: 0.7227, best: 0.7162) — 4/30 early stop patience used
+Best loss so far: 0.7161914721131325
+
+=====Epoch 21
+Train: Accuracy: 0.8401124338624338, Loss: 0.44410715141782053 
+Validation: Accuracy: 0.74375, Loss: 0.7132550140221914
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.7132550140221914
+
+=====Epoch 22
+Train: Accuracy: 0.8424272486772487, Loss: 0.4349626012185894 
+Validation: Accuracy: 0.7645833333333333, Loss: 0.6860768953959148
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.6860768953959148
+
+=====Epoch 23
+Train: Accuracy: 0.8440806878306878, Loss: 0.43963267530004185 
+Validation: Accuracy: 0.7489583333333333, Loss: 0.7039551148811977
+Validation loss did not improve (current: 0.7040, best: 0.6861) — 1/30 early stop patience used
+Best loss so far: 0.6860768953959148
+
+=====Epoch 24
+Train: Accuracy: 0.8430886243386243, Loss: 0.42209753808048034 
+Validation: Accuracy: 0.7625, Loss: 0.7033685386180878
+Validation loss did not improve (current: 0.7034, best: 0.6861) — 2/30 early stop patience used
+Best loss so far: 0.6860768953959148
+
+=====Epoch 25
+Train: Accuracy: 0.8515211640211641, Loss: 0.3961118931965853 
+Validation: Accuracy: 0.7572916666666667, Loss: 0.6956950376431147
+Validation loss did not improve (current: 0.6957, best: 0.6861) — 3/30 early stop patience used
+Best loss so far: 0.6860768953959148
+
+=====Epoch 26
+Train: Accuracy: 0.8609457671957672, Loss: 0.3670104418403257 
+Validation: Accuracy: 0.765625, Loss: 0.6976756970087687
+Validation loss did not improve (current: 0.6977, best: 0.6861) — 4/30 early stop patience used
+Best loss so far: 0.6860768953959148
+
+=====Epoch 27
+Train: Accuracy: 0.8597883597883598, Loss: 0.3764237117357355 
+Validation: Accuracy: 0.7645833333333333, Loss: 0.6924004430572192
+Validation loss did not improve (current: 0.6924, best: 0.6861) — 5/30 early stop patience used
+Best loss so far: 0.6860768953959148
+
+=====Epoch 28
+Train: Accuracy: 0.8564814814814815, Loss: 0.3926592367114844 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.6709157501657804
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.6709157501657804
+
+=====Epoch 29
+Train: Accuracy: 0.8531746031746031, Loss: 0.37513840738585386 
+Validation: Accuracy: 0.76875, Loss: 0.6838374237219492
+Validation loss did not improve (current: 0.6838, best: 0.6709) — 1/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 30
+Train: Accuracy: 0.8596230158730159, Loss: 0.3647429356105113 
+Validation: Accuracy: 0.765625, Loss: 0.6949814170598984
+Validation loss did not improve (current: 0.6950, best: 0.6709) — 2/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 31
+Train: Accuracy: 0.8604497354497355, Loss: 0.36519046399801497 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.709542786081632
+Validation loss did not improve (current: 0.7095, best: 0.6709) — 3/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 32
+Train: Accuracy: 0.8604497354497355, Loss: 0.365117525336919 
+Validation: Accuracy: 0.759375, Loss: 0.6948333273331324
+Validation loss did not improve (current: 0.6948, best: 0.6709) — 4/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 33
+Train: Accuracy: 0.8597883597883598, Loss: 0.3542955319480921 
+Validation: Accuracy: 0.75, Loss: 0.7038629521926244
+Validation loss did not improve (current: 0.7039, best: 0.6709) — 5/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 34
+Train: Accuracy: 0.8627645502645502, Loss: 0.35791458989735003 
+Validation: Accuracy: 0.7625, Loss: 0.6841536482175191
+Validation loss did not improve (current: 0.6842, best: 0.6709) — 6/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 35
+Train: Accuracy: 0.8589616402116402, Loss: 0.3641710725844537 
+Validation: Accuracy: 0.75625, Loss: 0.704201469818751
+Validation loss did not improve (current: 0.7042, best: 0.6709) — 7/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 36
+Train: Accuracy: 0.8625992063492064, Loss: 0.34766129644774885 
+Validation: Accuracy: 0.7520833333333333, Loss: 0.7071363697449367
+Validation loss did not improve (current: 0.7071, best: 0.6709) — 8/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 37
+Train: Accuracy: 0.8716931216931217, Loss: 0.333398322954222 
+Validation: Accuracy: 0.7583333333333333, Loss: 0.6811473538478215
+Validation loss did not improve (current: 0.6811, best: 0.6709) — 9/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 38
+Train: Accuracy: 0.8702050264550265, Loss: 0.3320628426693104 
+Validation: Accuracy: 0.7614583333333333, Loss: 0.6959295059243839
+Validation loss did not improve (current: 0.6959, best: 0.6709) — 10/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 39
+Train: Accuracy: 0.8682208994708994, Loss: 0.33050405356303725 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.6882736603418986
+Validation loss did not improve (current: 0.6883, best: 0.6709) — 11/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 40
+Train: Accuracy: 0.871031746031746, Loss: 0.328848133169154 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.697300206621488
+Validation loss did not improve (current: 0.6973, best: 0.6709) — 12/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 41
+Train: Accuracy: 0.873181216931217, Loss: 0.33008675316654185 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.6818416287501653
+Validation loss did not improve (current: 0.6818, best: 0.6709) — 13/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 42
+Train: Accuracy: 0.8708664021164021, Loss: 0.31728158193448236 
+Validation: Accuracy: 0.7416666666666667, Loss: 0.734807958205541
+Validation loss did not improve (current: 0.7348, best: 0.6709) — 14/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 43
+Train: Accuracy: 0.8690476190476191, Loss: 0.320665640056764 
+Validation: Accuracy: 0.7604166666666666, Loss: 0.690732886393865
+Validation loss did not improve (current: 0.6907, best: 0.6709) — 15/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 44
+Train: Accuracy: 0.8647486772486772, Loss: 0.342107691580341 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.7018919626871745
+Validation loss did not improve (current: 0.7019, best: 0.6709) — 16/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 45
+Train: Accuracy: 0.8702050264550265, Loss: 0.31943606392101004 
+Validation: Accuracy: 0.765625, Loss: 0.6789392590522766
+Validation loss did not improve (current: 0.6789, best: 0.6709) — 17/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 46
+Train: Accuracy: 0.8692129629629629, Loss: 0.32874193580614197 
+Validation: Accuracy: 0.7729166666666667, Loss: 0.6926510840654373
+Validation loss did not improve (current: 0.6927, best: 0.6709) — 18/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 47
+Train: Accuracy: 0.8698743386243386, Loss: 0.3170062050164219 
+Validation: Accuracy: 0.7625, Loss: 0.6984701414903005
+Validation loss did not improve (current: 0.6985, best: 0.6709) — 19/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 48
+Train: Accuracy: 0.8687169312169312, Loss: 0.3422489161135028 
+Validation: Accuracy: 0.7583333333333333, Loss: 0.696582258741061
+Validation loss did not improve (current: 0.6966, best: 0.6709) — 20/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 49
+Train: Accuracy: 0.8774801587301587, Loss: 0.3035713994786853 
+Validation: Accuracy: 0.771875, Loss: 0.6869317889213562
+Validation loss did not improve (current: 0.6869, best: 0.6709) — 21/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 50
+Train: Accuracy: 0.8726851851851852, Loss: 0.3146116957659759 
+Validation: Accuracy: 0.75625, Loss: 0.6791621635357539
+Validation loss did not improve (current: 0.6792, best: 0.6709) — 22/30 early stop patience used
+Best loss so far: 0.6709157501657804
+
+=====Epoch 51
+Train: Accuracy: 0.8690476190476191, Loss: 0.3167129885306749 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.6623674889405569
+Saving checkpoint...
+Loss improved - checkpoint saved
+Best loss so far: 0.6623674889405569
+
+=====Epoch 52
+Train: Accuracy: 0.8725198412698413, Loss: 0.3159544439937072 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.6833353439966837
+Validation loss did not improve (current: 0.6833, best: 0.6624) — 1/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 53
+Train: Accuracy: 0.8703703703703703, Loss: 0.3178938342622979 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.686370849609375
+Validation loss did not improve (current: 0.6864, best: 0.6624) — 2/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 54
+Train: Accuracy: 0.874834656084656, Loss: 0.31378811268658235 
+Validation: Accuracy: 0.7510416666666667, Loss: 0.7031257500251135
+Validation loss did not improve (current: 0.7031, best: 0.6624) — 3/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 55
+Train: Accuracy: 0.8673941798941799, Loss: 0.32004427326419366 
+Validation: Accuracy: 0.7645833333333333, Loss: 0.686944470802943
+Validation loss did not improve (current: 0.6869, best: 0.6624) — 4/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 56
+Train: Accuracy: 0.8792989417989417, Loss: 0.3083604697689966 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.6891044030586878
+Validation loss did not improve (current: 0.6891, best: 0.6624) — 5/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 57
+Train: Accuracy: 0.8726851851851852, Loss: 0.3242109007147885 
+Validation: Accuracy: 0.7604166666666666, Loss: 0.6977866431077321
+Validation loss did not improve (current: 0.6978, best: 0.6624) — 6/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 58
+Train: Accuracy: 0.8763227513227513, Loss: 0.3063781658019969 
+Validation: Accuracy: 0.7583333333333333, Loss: 0.7180961261192957
+Validation loss did not improve (current: 0.7181, best: 0.6624) — 7/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 59
+Train: Accuracy: 0.8746693121693122, Loss: 0.31413887813687325 
+Validation: Accuracy: 0.76875, Loss: 0.677216374874115
+Validation loss did not improve (current: 0.6772, best: 0.6624) — 8/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 60
+Train: Accuracy: 0.8817791005291006, Loss: 0.29939994854586466 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.6736954192320506
+Validation loss did not improve (current: 0.6737, best: 0.6624) — 9/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 61
+Train: Accuracy: 0.8736772486772487, Loss: 0.30838493034046477 
+Validation: Accuracy: 0.7625, Loss: 0.6977226088444392
+Validation loss did not improve (current: 0.6977, best: 0.6624) — 10/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 62
+Train: Accuracy: 0.874834656084656, Loss: 0.30876484359540635 
+Validation: Accuracy: 0.765625, Loss: 0.6935991287231446
+Validation loss did not improve (current: 0.6936, best: 0.6624) — 11/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 63
+Train: Accuracy: 0.87119708994709, Loss: 0.31636728027037214 
+Validation: Accuracy: 0.76875, Loss: 0.6935045490662257
+Validation loss did not improve (current: 0.6935, best: 0.6624) — 12/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 64
+Train: Accuracy: 0.8761574074074074, Loss: 0.31358820014687444 
+Validation: Accuracy: 0.7604166666666666, Loss: 0.681340879201889
+Validation loss did not improve (current: 0.6813, best: 0.6624) — 13/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 65
+Train: Accuracy: 0.875, Loss: 0.2973088772681655 
+Validation: Accuracy: 0.7645833333333333, Loss: 0.704324143131574
+Validation loss did not improve (current: 0.7043, best: 0.6624) — 14/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 66
+Train: Accuracy: 0.8812830687830688, Loss: 0.29833819019416025 
+Validation: Accuracy: 0.76875, Loss: 0.6994722470641136
+Validation loss did not improve (current: 0.6995, best: 0.6624) — 15/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 67
+Train: Accuracy: 0.8869047619047619, Loss: 0.28102165580820787 
+Validation: Accuracy: 0.7552083333333334, Loss: 0.6991471285621326
+Validation loss did not improve (current: 0.6991, best: 0.6624) — 16/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 68
+Train: Accuracy: 0.8797949735449735, Loss: 0.30375709014121816 
+Validation: Accuracy: 0.7520833333333333, Loss: 0.6948335578044256
+Validation loss did not improve (current: 0.6948, best: 0.6624) — 17/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 69
+Train: Accuracy: 0.8817791005291006, Loss: 0.3065694422121086 
+Validation: Accuracy: 0.765625, Loss: 0.6812360763549805
+Validation loss did not improve (current: 0.6812, best: 0.6624) — 18/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 70
+Train: Accuracy: 0.8746693121693122, Loss: 0.3086772454242227 
+Validation: Accuracy: 0.7520833333333333, Loss: 0.7161613369981448
+Validation loss did not improve (current: 0.7162, best: 0.6624) — 19/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 71
+Train: Accuracy: 0.8860780423280423, Loss: 0.2815206963273268 
+Validation: Accuracy: 0.7625, Loss: 0.6916245430707931
+Validation loss did not improve (current: 0.6916, best: 0.6624) — 20/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 72
+Train: Accuracy: 0.8766534391534392, Loss: 0.2935201018536217 
+Validation: Accuracy: 0.75, Loss: 0.7097482894857724
+Validation loss did not improve (current: 0.7097, best: 0.6624) — 21/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 73
+Train: Accuracy: 0.8781415343915344, Loss: 0.29898442996163216 
+Validation: Accuracy: 0.7625, Loss: 0.6942929456631343
+Validation loss did not improve (current: 0.6943, best: 0.6624) — 22/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 74
+Train: Accuracy: 0.876984126984127, Loss: 0.3093993580018086 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.7050416459639867
+Validation loss did not improve (current: 0.7050, best: 0.6624) — 23/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 75
+Train: Accuracy: 0.874834656084656, Loss: 0.3041646515447942 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.707381617029508
+Validation loss did not improve (current: 0.7074, best: 0.6624) — 24/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 76
+Train: Accuracy: 0.8774801587301587, Loss: 0.28559335930243374 
+Validation: Accuracy: 0.765625, Loss: 0.7113013009230296
+Validation loss did not improve (current: 0.7113, best: 0.6624) — 25/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 77
+Train: Accuracy: 0.8759920634920635, Loss: 0.2993069791368076 
+Validation: Accuracy: 0.75625, Loss: 0.6868951479593913
+Validation loss did not improve (current: 0.6869, best: 0.6624) — 26/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 78
+Train: Accuracy: 0.8791335978835979, Loss: 0.30538335458311455 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.7090877071022987
+Validation loss did not improve (current: 0.7091, best: 0.6624) — 27/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 79
+Train: Accuracy: 0.8816137566137566, Loss: 0.285819037704083 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.6910204206903775
+Validation loss did not improve (current: 0.6910, best: 0.6624) — 28/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 80
+Train: Accuracy: 0.8826058201058201, Loss: 0.2974763711392091 
+Validation: Accuracy: 0.759375, Loss: 0.6851317341128985
+Validation loss did not improve (current: 0.6851, best: 0.6624) — 29/30 early stop patience used
+Best loss so far: 0.6623674889405569
+
+=====Epoch 81
+Train: Accuracy: 0.8822751322751323, Loss: 0.2975815430520073 
+Validation: Accuracy: 0.7645833333333333, Loss: 0.7016390919685364
+Validation loss did not improve (current: 0.7016, best: 0.6624) — 30/30 early stop patience used
+Early stopping triggered at epoch 81
+Epochs: 81, Train Losses: 81, Valid Losses: 81
+Plot saved at ./plots/0429_rt_transfer.png

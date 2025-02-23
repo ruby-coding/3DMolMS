@@ -1,0 +1,3 @@
+Transfer learning with llm:
+
+python src/llmtox_SMOTE.py --plot ./plots/0618_llm.png --plot_confusion_matrix ./plots/confusion_matrix/0618_llm --transfer --resume_path ./check_point/molnet_qtof_etkdgv3.pt

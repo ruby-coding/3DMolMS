@@ -1,0 +1,948 @@
+Load the model & training configuration from ./src/molnetpack/config/molnet_rt.yml
+Load 3916 data from ./data/increase_mitochondrial_dysfunction_etkdgv3_train.pkl
+Load 978 data from ./data/increase_mitochondrial_dysfunction_etkdgv3_test.pkl
+Device: cuda:0
+MolnetTox_bin(
+  (encoder): Encoder(
+    (hidden_layers): ModuleList(
+      (0): MolConv2 k = 5 (21 -> 64)
+      (1): MolConv2 k = 5 (64 -> 64)
+      (2): MolConv2 k = 5 (64 -> 128)
+      (3): MolConv2 k = 5 (128 -> 256)
+      (4): MolConv2 k = 5 (256 -> 512)
+      (5): MolConv2 k = 5 (512 -> 1024)
+    )
+    (conv): Sequential(
+      (0): Conv1d(2048, 2048, kernel_size=(1,), stride=(1,), bias=False)
+      (1): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): LeakyReLU(negative_slope=0.2)
+    )
+    (merge): Sequential(
+      (0): Linear(in_features=4096, out_features=2048, bias=True)
+      (1): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): LeakyReLU(negative_slope=0.2)
+    )
+  )
+  (decoder): MSDecoder(
+    (blocks): ModuleList(
+      (0): FCResBlock (2048 -> 1024)
+      (1): FCResBlock (1024 -> 512)
+      (2): FCResBlock (512 -> 256)
+      (3): FCResBlock (256 -> 128)
+      (4): FCResBlock (128 -> 32)
+    )
+    (fc): Linear(in_features=32, out_features=3, bias=True)
+  )
+  (classifier): Linear(in_features=3, out_features=1, bias=True)
+) #Params: 19257527
+
+=====Epoch 1
+Train: Accuracy: 0.582010582010582, Loss: 6.619406676166272 
+Validation: Accuracy: 0.746875, Loss: 1.7967066834370296
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.746875
+
+=====Epoch 2
+Train: Accuracy: 0.685681216931217, Loss: 2.171108913169336 
+Validation: Accuracy: 0.7208333333333333, Loss: 1.201033991575241
+No improvement for 1/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 3
+Train: Accuracy: 0.7242063492063492, Loss: 1.4665371394031261 
+Validation: Accuracy: 0.696875, Loss: 1.0917257358630499
+No improvement for 2/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 4
+Train: Accuracy: 0.750165343915344, Loss: 1.242232341930349 
+Validation: Accuracy: 0.7166666666666667, Loss: 0.9870737632115681
+No improvement for 3/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 5
+Train: Accuracy: 0.7668650793650794, Loss: 1.0502450925805582 
+Validation: Accuracy: 0.7354166666666667, Loss: 0.9050952980915705
+No improvement for 4/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 6
+Train: Accuracy: 0.77744708994709, Loss: 0.9264783734682376 
+Validation: Accuracy: 0.7354166666666667, Loss: 0.865572119752566
+No improvement for 5/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 7
+Train: Accuracy: 0.7845568783068783, Loss: 0.8688489701303225 
+Validation: Accuracy: 0.7322916666666667, Loss: 0.888721231619517
+No improvement for 6/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 8
+Train: Accuracy: 0.7972883597883598, Loss: 0.7749663994268134 
+Validation: Accuracy: 0.734375, Loss: 0.8628907293081284
+No improvement for 7/30 epochs
+Best accuracy so far: 0.746875
+
+=====Epoch 9
+Train: Accuracy: 0.8015873015873016, Loss: 0.7070858503381411 
+Validation: Accuracy: 0.7520833333333333, Loss: 0.8586242685715357
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.7520833333333333
+
+=====Epoch 10
+Train: Accuracy: 0.8100198412698413, Loss: 0.6562582931663624 
+Validation: Accuracy: 0.7427083333333333, Loss: 0.8457260628541311
+No improvement for 1/30 epochs
+Best accuracy so far: 0.7520833333333333
+
+=====Epoch 11
+Train: Accuracy: 0.8189484126984127, Loss: 0.6046024386687253 
+Validation: Accuracy: 0.75, Loss: 0.8122639119625091
+No improvement for 2/30 epochs
+Best accuracy so far: 0.7520833333333333
+
+=====Epoch 12
+Train: Accuracy: 0.8349867724867724, Loss: 0.5488873314132136 
+Validation: Accuracy: 0.7552083333333334, Loss: 0.7934852808713913
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.7552083333333334
+
+=====Epoch 13
+Train: Accuracy: 0.8293650793650794, Loss: 0.5347223489609345 
+Validation: Accuracy: 0.759375, Loss: 0.8024929667512576
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.759375
+
+=====Epoch 14
+Train: Accuracy: 0.8424272486772487, Loss: 0.5155536824709208 
+Validation: Accuracy: 0.74375, Loss: 0.8175980756680171
+No improvement for 1/30 epochs
+Best accuracy so far: 0.759375
+
+=====Epoch 15
+Train: Accuracy: 0.8406084656084656, Loss: 0.4612677670502789 
+Validation: Accuracy: 0.771875, Loss: 0.7751613686482112
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.771875
+
+=====Epoch 16
+Train: Accuracy: 0.8427579365079365, Loss: 0.4676791261191721 
+Validation: Accuracy: 0.7489583333333333, Loss: 0.7454173545042674
+No improvement for 1/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 17
+Train: Accuracy: 0.8578042328042328, Loss: 0.39863988307733383 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.7519400636355082
+No improvement for 2/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 18
+Train: Accuracy: 0.855489417989418, Loss: 0.3987863981140354 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.7831197728713354
+No improvement for 3/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 19
+Train: Accuracy: 0.8621031746031746, Loss: 0.3847647824930766 
+Validation: Accuracy: 0.765625, Loss: 0.7831561073660851
+No improvement for 4/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 20
+Train: Accuracy: 0.873015873015873, Loss: 0.35740315819543506 
+Validation: Accuracy: 0.7572916666666667, Loss: 0.7626219590504965
+No improvement for 5/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 21
+Train: Accuracy: 0.8677248677248677, Loss: 0.34452923606075936 
+Validation: Accuracy: 0.759375, Loss: 0.7689294894536336
+No improvement for 6/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 22
+Train: Accuracy: 0.8733465608465608, Loss: 0.3220282301070198 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.7422836532195409
+No improvement for 7/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 23
+Train: Accuracy: 0.8756613756613757, Loss: 0.3227554430702218 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.7571154197057088
+No improvement for 8/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 24
+Train: Accuracy: 0.8883928571428571, Loss: 0.30415107853828915 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.7477454781532288
+No improvement for 9/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 25
+Train: Accuracy: 0.8814484126984127, Loss: 0.30814235330258727 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.7485774129629135
+No improvement for 10/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 26
+Train: Accuracy: 0.8902116402116402, Loss: 0.26323277160288794 
+Validation: Accuracy: 0.7583333333333333, Loss: 0.7717684616645177
+No improvement for 11/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 27
+Train: Accuracy: 0.8915343915343915, Loss: 0.27984974558943165 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.7574662928779919
+No improvement for 12/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 28
+Train: Accuracy: 0.8989748677248677, Loss: 0.25114668252330924 
+Validation: Accuracy: 0.76875, Loss: 0.7430358548959096
+No improvement for 13/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 29
+Train: Accuracy: 0.9002976190476191, Loss: 0.2580219044611252 
+Validation: Accuracy: 0.7677083333333333, Loss: 0.7576838687062264
+No improvement for 14/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 30
+Train: Accuracy: 0.8983134920634921, Loss: 0.24180432316408587 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.7751090114315351
+No improvement for 15/30 epochs
+Best accuracy so far: 0.771875
+
+=====Epoch 31
+Train: Accuracy: 0.9050925925925926, Loss: 0.23429230673524437 
+Validation: Accuracy: 0.7770833333333333, Loss: 0.7562869668006897
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.7770833333333333
+
+=====Epoch 32
+Train: Accuracy: 0.904265873015873, Loss: 0.2422562265798213 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.7651248623927435
+No improvement for 1/30 epochs
+Best accuracy so far: 0.7770833333333333
+
+=====Epoch 33
+Train: Accuracy: 0.9029431216931217, Loss: 0.238087258828932 
+Validation: Accuracy: 0.7729166666666667, Loss: 0.7807722479104996
+No improvement for 2/30 epochs
+Best accuracy so far: 0.7770833333333333
+
+=====Epoch 34
+Train: Accuracy: 0.9083994708994709, Loss: 0.21373862259227921 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.7831816832224529
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 35
+Train: Accuracy: 0.9107142857142857, Loss: 0.21741937272368916 
+Validation: Accuracy: 0.7791666666666667, Loss: 0.7840580811103185
+No improvement for 1/30 epochs
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 36
+Train: Accuracy: 0.9090608465608465, Loss: 0.21899872916755536 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.7964240650335948
+No improvement for 2/30 epochs
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 37
+Train: Accuracy: 0.9161706349206349, Loss: 0.20491649765304473 
+Validation: Accuracy: 0.771875, Loss: 0.7398482948541641
+No improvement for 3/30 epochs
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 38
+Train: Accuracy: 0.9118716931216931, Loss: 0.21851588482106174 
+Validation: Accuracy: 0.7729166666666667, Loss: 0.7890280693769455
+No improvement for 4/30 epochs
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 39
+Train: Accuracy: 0.9227843915343915, Loss: 0.18581643366506176 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.8060246467590332
+No improvement for 5/30 epochs
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 40
+Train: Accuracy: 0.9214616402116402, Loss: 0.19732710928040206 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.7879879653453827
+No improvement for 6/30 epochs
+Best accuracy so far: 0.7854166666666667
+
+=====Epoch 41
+Train: Accuracy: 0.9194775132275133, Loss: 0.19505891426609306 
+Validation: Accuracy: 0.7885416666666667, Loss: 0.7834440400203069
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 42
+Train: Accuracy: 0.9173280423280423, Loss: 0.20379206002073944 
+Validation: Accuracy: 0.7770833333333333, Loss: 0.7688085486491522
+No improvement for 1/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 43
+Train: Accuracy: 0.9264219576719577, Loss: 0.17982571745518022 
+Validation: Accuracy: 0.7770833333333333, Loss: 0.7937966585159302
+No improvement for 2/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 44
+Train: Accuracy: 0.9191468253968254, Loss: 0.19890952175335277 
+Validation: Accuracy: 0.784375, Loss: 0.8071872214476268
+No improvement for 3/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 45
+Train: Accuracy: 0.921792328042328, Loss: 0.18301042381220708 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.8189496666193008
+No improvement for 4/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 46
+Train: Accuracy: 0.9244378306878307, Loss: 0.18081560097733346 
+Validation: Accuracy: 0.7833333333333333, Loss: 0.8098858058452606
+No improvement for 5/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 47
+Train: Accuracy: 0.9267526455026455, Loss: 0.1769086417480909 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.7944666554530462
+No improvement for 6/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 48
+Train: Accuracy: 0.9216269841269841, Loss: 0.18231223979915576 
+Validation: Accuracy: 0.7875, Loss: 0.8490291515986125
+No improvement for 7/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 49
+Train: Accuracy: 0.9332010582010583, Loss: 0.16735010278761073 
+Validation: Accuracy: 0.778125, Loss: 0.7990184565385182
+No improvement for 8/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 50
+Train: Accuracy: 0.9318783068783069, Loss: 0.16015384886808023 
+Validation: Accuracy: 0.76875, Loss: 0.8197106793522835
+No improvement for 9/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 51
+Train: Accuracy: 0.935515873015873, Loss: 0.159667981749095 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.7702544348935286
+No improvement for 10/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 52
+Train: Accuracy: 0.9323743386243386, Loss: 0.1667127661485836 
+Validation: Accuracy: 0.7645833333333333, Loss: 0.8041893690824509
+No improvement for 11/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 53
+Train: Accuracy: 0.9411375661375662, Loss: 0.14610416872830934 
+Validation: Accuracy: 0.771875, Loss: 0.8234111989537874
+No improvement for 12/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 54
+Train: Accuracy: 0.9389880952380952, Loss: 0.14365735255851947 
+Validation: Accuracy: 0.7625, Loss: 0.8123364210128784
+No improvement for 13/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 55
+Train: Accuracy: 0.9368386243386243, Loss: 0.14982433588534752 
+Validation: Accuracy: 0.778125, Loss: 0.8294975191354752
+No improvement for 14/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 56
+Train: Accuracy: 0.9419642857142857, Loss: 0.14082329511327088 
+Validation: Accuracy: 0.778125, Loss: 0.841834714015325
+No improvement for 15/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 57
+Train: Accuracy: 0.9406415343915344, Loss: 0.14477070366776496 
+Validation: Accuracy: 0.7885416666666667, Loss: 0.8481222271919251
+No improvement for 16/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 58
+Train: Accuracy: 0.9366732804232805, Loss: 0.14692020455188065 
+Validation: Accuracy: 0.76875, Loss: 0.8552322268486023
+No improvement for 17/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 59
+Train: Accuracy: 0.9422949735449735, Loss: 0.14308617580879143 
+Validation: Accuracy: 0.7625, Loss: 0.8224894126256307
+No improvement for 18/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 60
+Train: Accuracy: 0.9432870370370371, Loss: 0.1360010545277012 
+Validation: Accuracy: 0.7697916666666667, Loss: 0.8398509919643402
+No improvement for 19/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 61
+Train: Accuracy: 0.9439484126984127, Loss: 0.14464250447908564 
+Validation: Accuracy: 0.7770833333333333, Loss: 0.8691451658805212
+No improvement for 20/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 62
+Train: Accuracy: 0.9464285714285714, Loss: 0.12881433758293354 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.8385499586661657
+No improvement for 21/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 63
+Train: Accuracy: 0.9459325396825397, Loss: 0.13574537499832412 
+Validation: Accuracy: 0.7885416666666667, Loss: 0.8528775120774905
+No improvement for 22/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 64
+Train: Accuracy: 0.9452711640211641, Loss: 0.1314988732682886 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.8317333290974299
+No improvement for 23/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 65
+Train: Accuracy: 0.9515542328042328, Loss: 0.11707979894031292 
+Validation: Accuracy: 0.778125, Loss: 0.8748145004113516
+No improvement for 24/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 66
+Train: Accuracy: 0.9508928571428571, Loss: 0.11829240174185504 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.8749745150407156
+No improvement for 25/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 67
+Train: Accuracy: 0.9518849206349206, Loss: 0.11637048601670555 
+Validation: Accuracy: 0.7635416666666667, Loss: 0.8682574073473612
+No improvement for 26/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 68
+Train: Accuracy: 0.9467592592592593, Loss: 0.12939688812192313 
+Validation: Accuracy: 0.7614583333333333, Loss: 0.8590776085853576
+No improvement for 27/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 69
+Train: Accuracy: 0.9477513227513228, Loss: 0.12525654704896388 
+Validation: Accuracy: 0.778125, Loss: 0.8505102783441544
+No improvement for 28/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 70
+Train: Accuracy: 0.9452711640211641, Loss: 0.1280504225078162 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.861685327688853
+No improvement for 29/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 71
+Train: Accuracy: 0.9484126984126984, Loss: 0.12784739102300985 
+Validation: Accuracy: 0.7864583333333334, Loss: 0.8563618908325831
+No improvement for 30/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 72
+Train: Accuracy: 0.9507275132275133, Loss: 0.11810072369518734 
+Validation: Accuracy: 0.7625, Loss: 0.877955945332845
+No improvement for 31/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 73
+Train: Accuracy: 0.9535383597883598, Loss: 0.111046702031874 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.8451337864001592
+No improvement for 32/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 74
+Train: Accuracy: 0.9474206349206349, Loss: 0.1258294558615754 
+Validation: Accuracy: 0.7791666666666667, Loss: 0.8732211063305537
+No improvement for 33/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 75
+Train: Accuracy: 0.9522156084656085, Loss: 0.11218513346834 
+Validation: Accuracy: 0.7791666666666667, Loss: 0.8648472398519516
+No improvement for 34/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 76
+Train: Accuracy: 0.9508928571428571, Loss: 0.11637345625816908 
+Validation: Accuracy: 0.771875, Loss: 0.9009989082813263
+No improvement for 35/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 77
+Train: Accuracy: 0.9507275132275133, Loss: 0.11970645969575912 
+Validation: Accuracy: 0.778125, Loss: 0.8591307759284973
+No improvement for 36/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 78
+Train: Accuracy: 0.9518849206349206, Loss: 0.12405395641351345 
+Validation: Accuracy: 0.78125, Loss: 0.9193334549665451
+No improvement for 37/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 79
+Train: Accuracy: 0.9487433862433863, Loss: 0.11897736044339441 
+Validation: Accuracy: 0.7729166666666667, Loss: 0.8881055737535158
+No improvement for 38/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 80
+Train: Accuracy: 0.9505621693121693, Loss: 0.11646385915902635 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.8727671355009079
+No improvement for 39/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 81
+Train: Accuracy: 0.9477513227513228, Loss: 0.12494185879560453 
+Validation: Accuracy: 0.7729166666666667, Loss: 0.850506259004275
+No improvement for 40/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 82
+Train: Accuracy: 0.9507275132275133, Loss: 0.11969246540376276 
+Validation: Accuracy: 0.78125, Loss: 0.8784232467412949
+No improvement for 41/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 83
+Train: Accuracy: 0.951058201058201, Loss: 0.1103420947264466 
+Validation: Accuracy: 0.778125, Loss: 0.8548581277330717
+No improvement for 42/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 84
+Train: Accuracy: 0.9490740740740741, Loss: 0.11834101480180545 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.8745546042919159
+No improvement for 43/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 85
+Train: Accuracy: 0.9538690476190477, Loss: 0.10865793709776231 
+Validation: Accuracy: 0.7833333333333333, Loss: 0.8865785270929336
+No improvement for 44/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 86
+Train: Accuracy: 0.9535383597883598, Loss: 0.11192348774118477 
+Validation: Accuracy: 0.775, Loss: 0.8764122992753982
+No improvement for 45/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 87
+Train: Accuracy: 0.953042328042328, Loss: 0.1104769988291005 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.8765974054733913
+No improvement for 46/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 88
+Train: Accuracy: 0.9495701058201058, Loss: 0.12074476573616266 
+Validation: Accuracy: 0.778125, Loss: 0.8515404487649599
+No improvement for 47/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 89
+Train: Accuracy: 0.9508928571428571, Loss: 0.12776799525612245 
+Validation: Accuracy: 0.7791666666666667, Loss: 0.8797425667444865
+No improvement for 48/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 90
+Train: Accuracy: 0.9527116402116402, Loss: 0.11044194883908387 
+Validation: Accuracy: 0.7791666666666667, Loss: 0.8856374571720759
+No improvement for 49/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 91
+Train: Accuracy: 0.9568452380952381, Loss: 0.10842786717016703 
+Validation: Accuracy: 0.7802083333333333, Loss: 0.8785584618647894
+No improvement for 50/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 92
+Train: Accuracy: 0.9548611111111112, Loss: 0.10886923892413655 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.8718096713225046
+No improvement for 51/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 93
+Train: Accuracy: 0.9535383597883598, Loss: 0.11546805422634833 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.9317843909064929
+No improvement for 52/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 94
+Train: Accuracy: 0.9525462962962963, Loss: 0.1109115711398541 
+Validation: Accuracy: 0.775, Loss: 0.9068774412075679
+No improvement for 53/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 95
+Train: Accuracy: 0.9553571428571429, Loss: 0.1029401935425109 
+Validation: Accuracy: 0.7802083333333333, Loss: 0.8999865333239238
+No improvement for 54/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 96
+Train: Accuracy: 0.9480820105820106, Loss: 0.1203037921841892 
+Validation: Accuracy: 0.7864583333333334, Loss: 0.9123205572366715
+No improvement for 55/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 97
+Train: Accuracy: 0.9533730158730159, Loss: 0.10766735161462473 
+Validation: Accuracy: 0.7802083333333333, Loss: 0.8666874786218007
+No improvement for 56/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 98
+Train: Accuracy: 0.9548611111111112, Loss: 0.10892971389232174 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.9023462543884914
+No improvement for 57/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 99
+Train: Accuracy: 0.9528769841269841, Loss: 0.10397376956802512 
+Validation: Accuracy: 0.7885416666666667, Loss: 0.9058549533287684
+No improvement for 58/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 100
+Train: Accuracy: 0.9484126984126984, Loss: 0.12406462533941502 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.9081875825921695
+No improvement for 59/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 101
+Train: Accuracy: 0.9538690476190477, Loss: 0.10988191322783235 
+Validation: Accuracy: 0.775, Loss: 0.8841969907283783
+No improvement for 60/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 102
+Train: Accuracy: 0.951223544973545, Loss: 0.11844775971104071 
+Validation: Accuracy: 0.7833333333333333, Loss: 0.8750293175379436
+No improvement for 61/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 103
+Train: Accuracy: 0.949239417989418, Loss: 0.11623806881880949 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.9139446943998337
+No improvement for 62/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 104
+Train: Accuracy: 0.9555224867724867, Loss: 0.1074518555006574 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.8763597463568051
+No improvement for 63/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 105
+Train: Accuracy: 0.9546957671957672, Loss: 0.10264318626590822 
+Validation: Accuracy: 0.775, Loss: 0.8822343657414119
+No improvement for 64/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 106
+Train: Accuracy: 0.9555224867724867, Loss: 0.1028549557640439 
+Validation: Accuracy: 0.771875, Loss: 0.9147140016158422
+No improvement for 65/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 107
+Train: Accuracy: 0.9546957671957672, Loss: 0.10754399239603016 
+Validation: Accuracy: 0.7875, Loss: 0.893491217494011
+No improvement for 66/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 108
+Train: Accuracy: 0.9548611111111112, Loss: 0.10534789315769794 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.9016838073730469
+No improvement for 67/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 109
+Train: Accuracy: 0.9513888888888888, Loss: 0.11916351896124305 
+Validation: Accuracy: 0.78125, Loss: 0.8360989828904469
+No improvement for 68/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 110
+Train: Accuracy: 0.9507275132275133, Loss: 0.12076004793640797 
+Validation: Accuracy: 0.784375, Loss: 0.9048035055398941
+No improvement for 69/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 111
+Train: Accuracy: 0.9556878306878307, Loss: 0.10685444505215086 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.9073929289976755
+No improvement for 70/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 112
+Train: Accuracy: 0.9543650793650794, Loss: 0.11211975964978732 
+Validation: Accuracy: 0.7697916666666667, Loss: 0.883349351088206
+No improvement for 71/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 113
+Train: Accuracy: 0.9584986772486772, Loss: 0.1043847572679321 
+Validation: Accuracy: 0.7802083333333333, Loss: 0.8905441949764887
+No improvement for 72/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 114
+Train: Accuracy: 0.9513888888888888, Loss: 0.1186250711165408 
+Validation: Accuracy: 0.7864583333333334, Loss: 0.8629325528939565
+No improvement for 73/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 115
+Train: Accuracy: 0.9558531746031746, Loss: 0.10697455379481195 
+Validation: Accuracy: 0.7697916666666667, Loss: 0.8985314925511678
+No improvement for 74/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 116
+Train: Accuracy: 0.9518849206349206, Loss: 0.11114769298386164 
+Validation: Accuracy: 0.78125, Loss: 0.8812888046105702
+No improvement for 75/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 117
+Train: Accuracy: 0.9558531746031746, Loss: 0.1056389292485263 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.8658824905753135
+No improvement for 76/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 118
+Train: Accuracy: 0.9556878306878307, Loss: 0.1090396333106414 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.8944533556699753
+No improvement for 77/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 119
+Train: Accuracy: 0.9545304232804233, Loss: 0.10674127468238116 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.9254915028810501
+No improvement for 78/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 120
+Train: Accuracy: 0.9535383597883598, Loss: 0.11243567596529684 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.8959355622529983
+No improvement for 79/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 121
+Train: Accuracy: 0.9541997354497355, Loss: 0.10995143981867288 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.9134005049864451
+No improvement for 80/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 122
+Train: Accuracy: 0.9558531746031746, Loss: 0.10315286180265643 
+Validation: Accuracy: 0.76875, Loss: 0.8413180112838745
+No improvement for 81/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 123
+Train: Accuracy: 0.9565145502645502, Loss: 0.1094508299126078 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.9125231256087621
+No improvement for 82/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 124
+Train: Accuracy: 0.9546957671957672, Loss: 0.10498042998431378 
+Validation: Accuracy: 0.78125, Loss: 0.8767304172118505
+No improvement for 83/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 125
+Train: Accuracy: 0.9555224867724867, Loss: 0.10978421992154191 
+Validation: Accuracy: 0.7875, Loss: 0.8774300679564476
+No improvement for 84/30 epochs
+Best accuracy so far: 0.7885416666666667
+
+=====Epoch 126
+Train: Accuracy: 0.951058201058201, Loss: 0.1210216675397186 
+Validation: Accuracy: 0.7895833333333333, Loss: 0.8714940503239632
+Saving checkpoint...
+Accuracy saved
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 127
+Train: Accuracy: 0.955026455026455, Loss: 0.1068405282126848 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.8790263921022415
+No improvement for 1/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 128
+Train: Accuracy: 0.953207671957672, Loss: 0.11111357522803167 
+Validation: Accuracy: 0.784375, Loss: 0.863999184469382
+No improvement for 2/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 129
+Train: Accuracy: 0.9575066137566137, Loss: 0.10529400236786358 
+Validation: Accuracy: 0.7708333333333334, Loss: 0.9037613193194072
+No improvement for 3/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 130
+Train: Accuracy: 0.9537037037037037, Loss: 0.10846258072113549 
+Validation: Accuracy: 0.7697916666666667, Loss: 0.9051394353310267
+No improvement for 4/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 131
+Train: Accuracy: 0.955026455026455, Loss: 0.10741921045654823 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.9111201604207356
+No improvement for 5/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 132
+Train: Accuracy: 0.9515542328042328, Loss: 0.11058242765881082 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.8825485110282898
+No improvement for 6/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 133
+Train: Accuracy: 0.9528769841269841, Loss: 0.11422935768188268 
+Validation: Accuracy: 0.7770833333333333, Loss: 0.9094702541828156
+No improvement for 7/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 134
+Train: Accuracy: 0.955191798941799, Loss: 0.11157631542454793 
+Validation: Accuracy: 0.7822916666666667, Loss: 0.889032648007075
+No improvement for 8/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 135
+Train: Accuracy: 0.9541997354497355, Loss: 0.10865593948721806 
+Validation: Accuracy: 0.7760416666666666, Loss: 0.87782328526179
+No improvement for 9/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 136
+Train: Accuracy: 0.9520502645502645, Loss: 0.1093082917193887 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.848031931122144
+No improvement for 10/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 137
+Train: Accuracy: 0.9553571428571429, Loss: 0.11441868951509672 
+Validation: Accuracy: 0.7770833333333333, Loss: 0.8987636757393678
+No improvement for 11/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 138
+Train: Accuracy: 0.955026455026455, Loss: 0.10258555081155565 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.8716784656047821
+No improvement for 12/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 139
+Train: Accuracy: 0.955191798941799, Loss: 0.10924927955838265 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.8958236982425054
+No improvement for 13/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 140
+Train: Accuracy: 0.955191798941799, Loss: 0.10543388058308256 
+Validation: Accuracy: 0.7697916666666667, Loss: 0.902535675962766
+No improvement for 14/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 141
+Train: Accuracy: 0.9508928571428571, Loss: 0.11046066042528581 
+Validation: Accuracy: 0.7854166666666667, Loss: 0.8875534296035766
+No improvement for 15/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 142
+Train: Accuracy: 0.9517195767195767, Loss: 0.1163981360674062 
+Validation: Accuracy: 0.775, Loss: 0.8436046948035558
+No improvement for 16/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 143
+Train: Accuracy: 0.9563492063492064, Loss: 0.10690513773323604 
+Validation: Accuracy: 0.778125, Loss: 0.9106673578421275
+No improvement for 17/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 144
+Train: Accuracy: 0.9543650793650794, Loss: 0.10729297989161399 
+Validation: Accuracy: 0.778125, Loss: 0.897184353073438
+No improvement for 18/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 145
+Train: Accuracy: 0.9565145502645502, Loss: 0.10157587784761317 
+Validation: Accuracy: 0.7875, Loss: 0.8749747862418492
+No improvement for 19/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 146
+Train: Accuracy: 0.9580026455026455, Loss: 0.09990161348124424 
+Validation: Accuracy: 0.7666666666666667, Loss: 0.9016032338142395
+No improvement for 20/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 147
+Train: Accuracy: 0.9513888888888888, Loss: 0.11572357259996274 
+Validation: Accuracy: 0.7697916666666667, Loss: 0.8757637560367584
+No improvement for 21/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 148
+Train: Accuracy: 0.9546957671957672, Loss: 0.11538372195458838 
+Validation: Accuracy: 0.7864583333333334, Loss: 0.89622682929039
+No improvement for 22/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 149
+Train: Accuracy: 0.9558531746031746, Loss: 0.10524101635667855 
+Validation: Accuracy: 0.778125, Loss: 0.9201714813709259
+No improvement for 23/30 epochs
+Best accuracy so far: 0.7895833333333333
+
+=====Epoch 150
+Train: Accuracy: 0.9540343915343915, Loss: 0.1091151386055918 
+Validation: Accuracy: 0.7739583333333333, Loss: 0.8598492632309596
+No improvement for 24/30 epochs
+Best accuracy so far: 0.7895833333333333
+Epochs: 150, Train Losses: 150, Valid Losses: 150
+Plot saved at ./plots/training_vs_validation_loss.png
