@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
 from torch.utils.data import DataLoader
-from src.molnetpack.dataset import MolTox_Dataset  # Ensure this is correctly imported
+from molnetpack import MolTox_Dataset  # Ensure this is correctly imported
 
 # Argument parser for loading saved model
 parser = argparse.ArgumentParser(description="Evaluate trained model")
