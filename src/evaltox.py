@@ -32,9 +32,12 @@ print("Model successfully loaded!")
 
 # Load test data
 test_set = MolTox_Dataset(args.test_data)
-test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
+test_loader = DataLoader(test_set, batch_size=config['train']['batch_size'], shuffle=False)
 
-def evaluate_model(model, device, test_loader, num_classes=3):
+# Retrieve num_points from config (as done during training)
+num_points = config['model']['max_atom_num']
+
+def evaluate_model(model, device, test_loader, num_points, num_classes=3):
     y_true = []
     y_pred = []
     y_scores = []  # Store logits for AUROC calculation
@@ -47,7 +50,8 @@ def evaluate_model(model, device, test_loader, num_classes=3):
             x = x.permute(0, 2, 1)  # Ensure correct shape
             y = y.to(device, dtype=torch.int)  # Convert labels to integers
 
-            idx_base = torch.arange(0, x.shape[0], device=device).view(-1, 1, 1) * test_loader.dataset.num_points
+            # Correct the idx_base calculation using explicit num_points
+            idx_base = torch.arange(0, x.shape[0], device=device).view(-1, 1, 1) * num_points
 
             # Get predictions
             pred_logits = model(x, None, idx_base)  # Get raw logits
@@ -67,6 +71,7 @@ def evaluate_model(model, device, test_loader, num_classes=3):
     print("\nClassification Report:\n", report)
 
     # Compute AUROC (if applicable)
+    auc_score = None
     try:
         y_true_one_hot = np.eye(num_classes)[y_true]  # Convert labels to one-hot
         auc_score = roc_auc_score(y_true_one_hot, y_scores, multi_class="ovr")
@@ -77,4 +82,4 @@ def evaluate_model(model, device, test_loader, num_classes=3):
     return conf_matrix, auc_score
 
 # Run evaluation
-conf_matrix, auc_score = evaluate_model(model, device, test_loader)
+conf_matrix, auc_score = evaluate_model(model, device, test_loader, num_points)
