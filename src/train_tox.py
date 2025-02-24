@@ -21,70 +21,83 @@ from molnetpack import MolTox_Dataset
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
-        
-def train_step(model, device, loader, optimizer, batch_size, num_points): 
+
+
+
+def train_step(model, device, loader, optimizer, batch_size, num_points):
     accuracy = 0
+    criterion = nn.CrossEntropyLoss()  # Use CrossEntropyLoss for multi-class classification
+
     with tqdm(total=len(loader)) as bar:
         for step, batch in enumerate(loader):
             print(f"Batch structure: {len(batch)}")
             _, x, features, y = batch
             x = x.to(device=device, dtype=torch.float)
             print(x.size())
-            x = x.permute(0, 2, 1)
-            y = y.to(device=device, dtype=torch.float).view(-1, 1)  # Ensure shape is [batch_size, 1]
-            
+            x = x.permute(0, 2, 1)  # Adjust tensor dimensions
+
+            # Ensure `y` has shape `[batch_size]` and contains class indices (0,1,2)
+            y = y.to(device=device, dtype=torch.long).view(batch_size)
+
             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
             optimizer.zero_grad()
             model.train()
-            pred = model(x, None, idx_base)  # `pred` should be logits, not probabilities
-            
-            # Use BCEWithLogitsLoss for numerical stability
-            loss_fn = nn.BCEWithLogitsLoss()
-            loss = loss_fn(pred, y)  
+            pred = model(x, None, idx_base)  # `pred` shape: [batch_size, 3] (logits)
+
+            # Compute loss
+            loss = criterion(pred, y)  # CrossEntropyLoss expects `[batch_size]` targets
 
             loss.backward()
             optimizer.step()
 
-            # Convert logits to probabilities for accuracy calculation
-            pred_binary = torch.sigmoid(pred).round()  # Converts logits to 0 or 1
-            accuracy += (pred_binary == y).float().mean().item()  # Compute accuracy
+            # Compute accuracy
+            pred_class = pred.argmax(dim=1)  # Get the predicted class index
+            batch_accuracy = (pred_class == y).float().mean().item()
+            accuracy += batch_accuracy
 
             bar.set_description('Train')
-            bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
+            bar.set_postfix(lr=get_lr(optimizer), loss=loss.item(), acc=batch_accuracy)
             bar.update(1)
 
-    return accuracy / (step + 1)  # Return average accuracy over all batches
+    return accuracy / (step + 1)  # Return average accuracy
 
-# def train_step(model, device, loader, optimizer, batch_size, num_points): 
-# 	accuracy = 0
-# 	with tqdm(total=len(loader)) as bar:
-# 		for step, batch in enumerate(loader):
-# 			print(f"Batch structure: {len(batch)}")
-# 			_, x, features, y = batch
-# 			x = x.to(device=device, dtype=torch.float)
-# 			print(x.size())
-# 			x = x.permute(0, 2, 1)
-# 			y = y.to(device=device, dtype=torch.float)
-# 			idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
-# 			optimizer.zero_grad()
-# 			model.train()
-# 			pred = model(x, None, idx_base) 
-# 			loss_fn = nn.BCEWithLogitsLoss()
-#             loss = loss_fn(pred, y.float())  # Ensure y is float type
-# 			loss.backward()
+# def train_step(model, device, loader, optimizer, batch_size, num_points):
+#     accuracy = 0
+#     with tqdm(total=len(loader)) as bar:
+#         for step, batch in enumerate(loader):
+#             print(f"Batch structure: {len(batch)}")
+#             _, x, features, y = batch
+#             x = x.to(device=device, dtype=torch.float)
+#             print(x.size())
+#             x = x.permute(0, 2, 1)
+#             y = y.to(device=device, dtype=torch.float).view(-1, 1)  # Ensure shape is [batch_size, 1]
+#
+#             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
+#
+#             optimizer.zero_grad()
+#             model.train()
+#             pred = model(x, None, idx_base)  # `pred` should be logits, not probabilities
+#
+#             # Use BCEWithLogitsLoss for numerical stability
+#             loss_fn = nn.BCEWithLogitsLoss()
+#             loss = loss_fn(pred, y)
+#
+#             loss.backward()
+#             optimizer.step()
+#
+#             # Convert logits to probabilities for accuracy calculation
+#             pred_binary = torch.sigmoid(pred).round()  # Converts logits to 0 or 1
+#             accuracy += (pred_binary == y).float().mean().item()  # Compute accuracy
+#
+#             bar.set_description('Train')
+#             bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
+#             bar.update(1)
+#
+#     return accuracy / (step + 1)  # Return average accuracy over all batches
 
-# 			bar.set_description('Train')
-# 			bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
-# 			bar.update(1)
-
-# 			optimizer.step()
-
-# 			accuracy += torch.abs(pred - y).mean().item()
-# 	return accuracy / (step + 1)
-
-def eval_step(model: nn.Module, device, loader, batch_size, num_points):
+def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_points):
     model.eval()
     accuracy = 0
     total = 0
