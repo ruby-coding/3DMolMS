@@ -193,68 +193,82 @@ if __name__ == "__main__":
                     drop_last=True)
 
     # 2. Model
-    device = torch.device("cuda:" + str(args.device)) if torch.cuda.is_available() and not args.no_cuda else torch.device("cpu")
+    device = torch.device(
+        "cuda:" + str(args.device)) if torch.cuda.is_available() and not args.no_cuda else torch.device("cpu")
     print(f'Device: {device}')
 
     model = MolNet_tox(config['model']).to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f'{str(model)} #Params: {num_params}')
 
-    # 3. Train
+    # 3. Optimizer & Scheduler
     optimizer = optim.AdamW(model.parameters(), lr=config['train']['lr'])
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
-    if args.transfer and args.resume_path != '':
-        print("Load the pretrained encoder (freeze the encoder)...")
-        state_dict = torch.load(args.resume_path, map_location=device, weights_only=True)['model_state_dict']
-        encoder_dict = {}
-        for name, param in state_dict.items():
-            if not name.startswith("decoder"):
-                param.requires_grad = False # freeze the encoder
-                encoder_dict[name] = param
-        model.load_state_dict(encoder_dict, strict=False)
-    elif args.resume_path != '':
-        print("Load the checkpoints...")
-        model.load_state_dict(torch.load(args.resume_path, map_location=device, weights_only=True)['model_state_dict'])
-        optimizer.load_state_dict(torch.load(args.resume_path, map_location=device, weights_only=True)['optimizer_state_dict'])
-        scheduler.load_state_dict(torch.load(args.resume_path, map_location=device, weights_only=True)['scheduler_state_dict'])
-        best_valid_accuracy = torch.load(args.resume_path, weights_only=True)['best_val_accuracy']
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5,
+                                                     patience=10)  # Accuracy should improve
 
+    # Load checkpoint if applicable
+    if args.resume_path != '':
+        print("Loading checkpoint...")
+        checkpoint = torch.load(args.resume_path, map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        best_valid_accuracy = checkpoint['best_val_mae']
+    else:
+        best_valid_accuracy = 0
+
+    # Handle transfer learning
+    if args.transfer and args.resume_path != '':
+        print("Freezing encoder layers...")
+        for name, param in model.named_parameters():
+            if not name.startswith("decoder"):
+                param.requires_grad = False  # Freeze encoder
+
+    # Ensure checkpoint path exists
     if args.checkpoint_path != '':
         checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
-        os.makedirs(checkpoint_dir, exist_ok = True)
+        os.makedirs(checkpoint_dir, exist_ok=True)
 
-    best_valid_accuracy = 0
+    # Training loop
     early_stop_step = 30
     early_stop_patience = 0
+
     for epoch in range(1, config['train']['epochs'] + 1):
         print("\n=====Epoch {}".format(epoch))
         train_accuracy = train_step(model, device, train_loader, optimizer,
-                                batch_size=config['train']['batch_size'], num_points=config['model']['max_atom_num'])
+                                    batch_size=config['train']['batch_size'],
+                                    num_points=config['model']['max_atom_num'])
         valid_accuracy = eval_step(model, device, valid_loader,
-                                batch_size=config['train']['batch_size'], num_points=config['model']['max_atom_num'])
-        print("Train: Accuracy: {}, \nValidation: Accuracy: {}".format(train_accuracy, valid_accuracy))
+                                   batch_size=config['train']['batch_size'], num_points=config['model']['max_atom_num'])
 
+        print(f"Train: Accuracy: {train_accuracy}, \nValidation: Accuracy: {valid_accuracy}")
 
-
+        # Update best accuracy
         if valid_accuracy > best_valid_accuracy:
             best_valid_accuracy = valid_accuracy
-
             if args.checkpoint_path != '':
                 print('Saving checkpoint...')
-                checkpoint = {'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'scheduler_state_dict': scheduler.state_dict(), 'best_val_mae': best_valid_accuracy, 'num_params': num_params}
+                checkpoint = {
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'scheduler_state_dict': scheduler.state_dict(),
+                    'best_val_mae': best_valid_accuracy,
+                    'num_params': num_params
+                }
                 torch.save(checkpoint, args.checkpoint_path)
-
             early_stop_patience = 0
             print('Early stop patience reset')
         else:
             early_stop_patience += 1
-            print('Early stop count: {}/{}'.format(early_stop_patience, early_stop_step))
+            print(f'Early stop count: {early_stop_patience}/{early_stop_step}')
 
-        # scheduler.step()
-        scheduler.step(valid_accuracy) # ReduceLROnPlateau
+        # Reduce LR if validation accuracy does not improve
+        scheduler.step(valid_accuracy)
+
         print(f'Best accuracy so far: {best_valid_accuracy}')
 
-        if early_stop_patience == early_stop_step:
+        if early_stop_patience >= early_stop_step:
             print('Early stop!')
             break
 
