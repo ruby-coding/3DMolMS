@@ -236,7 +236,7 @@ if __name__ == "__main__":
 
 
 
-        if valid_accuracy < best_valid_accuracy:
+        if valid_accuracy > best_valid_accuracy:
             best_valid_accuracy = valid_accuracy
 
             if args.checkpoint_path != '':
