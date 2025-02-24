@@ -1,4 +1,5 @@
 import torch
+import sklearn
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
 import numpy as np
 
