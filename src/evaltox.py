@@ -29,7 +29,7 @@ model = torch.jit.load(args.ex_model_path, map_location=device)
 model.to(device)
 model.eval()
 print("Model successfully loaded!")
-
+print("Model")
 # Load test data
 test_set = MolTox_Dataset(args.test_data)
 test_loader = DataLoader(test_set, batch_size=config['train']['batch_size'], shuffle=False)
