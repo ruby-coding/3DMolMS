@@ -102,6 +102,9 @@ def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_poin
     model.eval()
     accuracy = 0
     total = 0
+    val_loss = 0
+    criterion = nn.CrossEntropyLoss()
+
     with tqdm(total=len(loader)) as bar:
         for step, batch in enumerate(loader):
             _, x, features, y = batch
@@ -112,33 +115,25 @@ def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_poin
 
             with torch.no_grad():
                 pred = model(x, None, idx_base)
+                batch_loss = criterion(pred, y)
 
             _, predicted = torch.max(pred, 1)
 
             correct = (predicted == y).sum().item()
             accuracy += correct
             total += y.size(0)
+            val_loss += batch_loss.item()
 
             bar.set_description('Eval')
             bar.update(1)
 
-    return accuracy / total
+    return accuracy / total, val_loss / (step + 1)
 
 
 def init_random_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-
-
-# python ./src/train_rt.py --train_data ./data/origin/metlin_etkdgv3_train.pkl\
-# --test_data ./data/origin/metlin_etkdgv3_test.pkl \
-# --model_config_path ./src/molnetpack/config/molnet_rt.yml \
-# --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
-# --checkpoint_path ./check_point/molnet_rt_etkdgv3_tl.pt \
-# --transfer \
-# --resume_path ./check_point/molnet_qtof_etkdgv3.pt
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Molecular Retention Time Prediction (Train)')
@@ -158,6 +153,8 @@ if __name__ == "__main__":
                         help='Whether to load the pretrained encoder')
     parser.add_argument('--ex_model_path', type=str, default='',
                         help='Path to export the whole model (structure & weights)')
+    parser.add_argument('--validation_only', action='store_true',
+                        help = 'Run validation only without training')
 
     parser.add_argument('--seed', type=int, default=42,
                         help='Seed for random functions')
@@ -232,18 +229,22 @@ if __name__ == "__main__":
     early_stop_step = 30
     early_stop_patience = 0
 
-    y = []
+    train_losses = []
+    valid_losses = []
+
+
     for epoch in range(1, config['train']['epochs'] + 1):
         print("\n=====Epoch {}".format(epoch))
         train_accuracy, train_loss = train_step(model, device, train_loader, optimizer,
                                                 batch_size=config['train']['batch_size'],
                                                 num_points=config['model']['max_atom_num'])
-        valid_accuracy = eval_step(model, device, valid_loader,
+        valid_accuracy, valid_loss = eval_step(model, device, valid_loader,
                                    batch_size=config['train']['batch_size'], num_points=config['model']['max_atom_num'])
 
-        print(f"Train: Accuracy: {train_accuracy}, \nValidation: Accuracy: {valid_accuracy}")
+        print(f"Train: Accuracy: {train_accuracy}, Loss: {train_loss} \nValidation: Accuracy: {valid_accuracy}, Loss: {valid_loss}")
 
-        y.append(train_loss)
+        train_losses.append(train_loss)
+        valid_losses.append(valid_loss)
 
         # Update best accuracy
         if valid_accuracy > best_valid_accuracy:
@@ -283,26 +284,62 @@ if __name__ == "__main__":
             print('Early stop!')
             break
 
+    # Load Best Saved Model & Validate Again
+    print("Loading the bet saved model for final validation....")
+    checkpoint = torch.load(args.checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+
+    # Final validation with the loaded model
+    final_valid_accuracy = eval_step(model, device, valid_loader,
+                                     batch_size = config['train']['batch_size'],
+                                     num_points = config['model']['max_atom_num'])
+
+    print(f"Final Validation Accuracy with Best Model: {final_valid_accuracy}")
+
     x = list(range(1, config['train']['epochs'] + 1))
 
-    # plot
+    # Training loss
     fig, ax = plt.subplots()
+    ax.plot(x, train_losses, linewidth = 2.0, label = "Training Loss", color = "blue")
+    ax.plot(x, valid_losses, linewidth = 2.0, label = "Validation Loss", color = "red")
 
-    ax.plot(x, y, linewidth=2.0)
-
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Loss")
+    ax.set_title("Training vs Validation Loss")
     ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
            ylim=(0, 8), yticks=np.arange(1, 8))
-
     plt.show()
 
-    if args.ex_model_path != '':  # export the model
+    if args.ex_model_path != '':
         print('Export the model...')
-        model_scripted = torch.jit.script(model)  # Export to TorchScript
-        model_scripted.save(args.ex_model_path)  # Save
+        model_scripted = torch.jit.script(model)
+        model_scripted.save(args.ex_model_path)
+        print(f"Model exported to {args.ex_model_path}")
 
+    if args.validation_only:
+        print("Running validation...")
+        print(f"Loading model from {args.checkpoint_path}...")
+        checkpoint = torch.load(args.checkpoint_path, map_location = device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+
+        final_validation = eval_step(model, device, valid_loader,
+                                     batch_size = config['train']['batch_size'],
+                                     num_points = config['model']['max_atom_num'])
+        print(f"Final Validation Accuracy: {final_valid_accuracy}")
+
+        exit()
 # python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
 # --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
 # --model_config_path ./src/molnetpack/config/molnet_rt.yml \
 # --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
 # --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
 # --ex_model_path ./check_point/
+
+# For validation only
+# python ./src/train_tox.py --validate_only \
+# --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
+# --model_config_path ./src/molnetpack/config/molnet_rt.yml \
+# --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
+# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt
