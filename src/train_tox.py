@@ -312,9 +312,9 @@ if __name__ == "__main__":
     ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
            ylim=(0, 8), yticks=np.arange(1, 8))
 
-    plot_dir = args.plot_dir
-    os.makedirs(plot_dir, exist_ok=True)
-    plot_filename = os.path.join(plot_dir, 'training_vs_validation_loss.png')
+    plot_dir = args.plot
+    os.makedirs(plot, exist_ok=True)
+    plot_filename = os.path.join(plot, 'training_vs_validation_loss.png')
     fig.savefig(plot_filename)
 
     print(f"Plot saved at {plot_filename}")
