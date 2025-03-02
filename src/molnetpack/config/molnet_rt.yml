@@ -10,7 +10,7 @@ model:
   decode_layers: [1024, 512, 256, 128, 32]
 
 train:
-  epochs: 2
+  epochs: 800
   batch_size: 32
   num_workers: 0
   lr: 0.0001
