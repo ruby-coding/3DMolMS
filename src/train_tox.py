@@ -6,6 +6,7 @@ LastEditTime: 2023-10-20 17:16:17
 import os
 import argparse
 import numpy as np
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 import yaml
 
@@ -23,8 +24,8 @@ def get_lr(optimizer):
         return param_group['lr']
 
 
-
-def train_step(model, device, loader, optimizer, batch_size, num_points):
+def train_step(model, device, loader, optimizer, batch_size, num_points) -> tuple[int, int]:
+    loss = 0
     accuracy = 0
     criterion = nn.CrossEntropyLoss()  # Use CrossEntropyLoss for multi-class classification
 
@@ -34,33 +35,33 @@ def train_step(model, device, loader, optimizer, batch_size, num_points):
             _, x, features, y = batch
             x = x.to(device=device, dtype=torch.float)
             print(x.size())
-            x = x.permute(0, 2, 1)  # Adjust tensor dimensions
+            x = x.permute(0, 2, 1)
 
-            # Ensure `y` has shape `[batch_size]` and contains class indices (0,1,2)
             y = y.to(device=device, dtype=torch.long).view(batch_size)
 
             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
             optimizer.zero_grad()
             model.train()
-            pred = model(x, None, idx_base)  # `pred` shape: [batch_size, 3] (logits)
+            pred = model(x, None, idx_base)
 
             # Compute loss
-            loss = criterion(pred, y)  # CrossEntropyLoss expects `[batch_size]` targets
+            batch_loss = criterion(pred, y)
+            loss += int(batch_loss)
 
-            loss.backward()
+            batch_loss.backward()
             optimizer.step()
 
             # Compute accuracy
-            pred_class = pred.argmax(dim=1)  # Get the predicted class index
+            pred_class = pred.argmax(dim=1)
             batch_accuracy = (pred_class == y).float().mean().item()
             accuracy += batch_accuracy
 
             bar.set_description('Train')
-            bar.set_postfix(lr=get_lr(optimizer), loss=loss.item(), acc=batch_accuracy)
+            bar.set_postfix(lr=get_lr(optimizer), loss=batch_loss.item(), acc=batch_accuracy)
             bar.update(1)
 
-    return accuracy / (step + 1)  # Return average accuracy
+    return accuracy / (step + 1), loss / (step + 1)
 
 
 # def train_step(model, device, loader, optimizer, batch_size, num_points):
@@ -105,25 +106,22 @@ def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_poin
         for step, batch in enumerate(loader):
             _, x, features, y = batch
             x = x.to(device=device, dtype=torch.float)
-            x = x.permute(0, 2, 1)  # Adjust dimensions for model input
-            y = y.to(device=device, dtype=torch.long)  # Ensure labels are integers for classification
+            x = x.permute(0, 2, 1)
+            y = y.to(device=device, dtype=torch.long)
             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
             with torch.no_grad():
                 pred = model(x, None, idx_base)
 
-            # Convert predictions to class indices (e.g., for multi-class classification)
-            _, predicted = torch.max(pred, 1)  # Get the class with the highest score
+            _, predicted = torch.max(pred, 1)
 
-            # Update accuracy
             correct = (predicted == y).sum().item()
             accuracy += correct
-            total += y.size(0)  # Total number of samples
+            total += y.size(0)
 
             bar.set_description('Eval')
             bar.update(1)
 
-    # Compute overall accuracy
     return accuracy / total
 
 
@@ -142,7 +140,7 @@ def init_random_seed(seed):
 # --resume_path ./check_point/molnet_qtof_etkdgv3.pt
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Molecular Retention Time Prediction (Train)')
     parser.add_argument('--train_data', type=str, default='./data/cardio_toxicity_etkdgv3_train.pkl',
                         help='path to training data (pkl)')
@@ -152,7 +150,7 @@ if __name__ == "__main__":
                         help='path to model and training configuration')
     parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
                         help='path to configuration')
-    parser.add_argument('--checkpoint_path', type=str, default = './check_point/molnet_rt_etkdgv3.pt',
+    parser.add_argument('--checkpoint_path', type=str, default='./check_point/molnet_rt_etkdgv3.pt',
                         help='Path to save checkpoint')
     parser.add_argument('--resume_path', type=str, default='',
                         help='Path to pretrained model')
@@ -174,23 +172,24 @@ if __name__ == "__main__":
         config = yaml.load(f, Loader=yaml.FullLoader)
     print('Load the model & training configuration from {}'.format(args.model_config_path))
     # configuration check
-    assert config['model']['batch_size'] == config['train']['batch_size'], "Batch size should be the same in model and training configuration"
+    assert config['model']['batch_size'] == config['train'][
+        'batch_size'], "Batch size should be the same in model and training configuration"
 
     # 1. Data
     train_set = MolTox_Dataset(args.train_data)
     train_loader = DataLoader(
-                    train_set,
-                    batch_size=config['train']['batch_size'],
-                    shuffle=True,
-                    num_workers=config['train']['num_workers'],
-                    drop_last=True)
+        train_set,
+        batch_size=config['train']['batch_size'],
+        shuffle=True,
+        num_workers=config['train']['num_workers'],
+        drop_last=True)
     valid_set = MolTox_Dataset(args.test_data)
     valid_loader = DataLoader(
-                    valid_set,
-                    batch_size=config['train']['batch_size'],
-                    shuffle=True,
-                    num_workers=config['train']['num_workers'],
-                    drop_last=True)
+        valid_set,
+        batch_size=config['train']['batch_size'],
+        shuffle=True,
+        num_workers=config['train']['num_workers'],
+        drop_last=True)
 
     # 2. Model
     device = torch.device(
@@ -233,15 +232,18 @@ if __name__ == "__main__":
     early_stop_step = 30
     early_stop_patience = 0
 
+    y = []
     for epoch in range(1, config['train']['epochs'] + 1):
         print("\n=====Epoch {}".format(epoch))
-        train_accuracy = train_step(model, device, train_loader, optimizer,
-                                    batch_size=config['train']['batch_size'],
-                                    num_points=config['model']['max_atom_num'])
+        train_accuracy, train_loss = train_step(model, device, train_loader, optimizer,
+                                                batch_size=config['train']['batch_size'],
+                                                num_points=config['model']['max_atom_num'])
         valid_accuracy = eval_step(model, device, valid_loader,
                                    batch_size=config['train']['batch_size'], num_points=config['model']['max_atom_num'])
 
         print(f"Train: Accuracy: {train_accuracy}, \nValidation: Accuracy: {valid_accuracy}")
+
+        y.append(train_loss)
 
         # Update best accuracy
         if valid_accuracy > best_valid_accuracy:
@@ -268,15 +270,35 @@ if __name__ == "__main__":
 
         print(f'Best accuracy so far: {best_valid_accuracy}')
 
+        # # method 1
+        # for epoch in range(1, config['train']['epochs'] + 1):
+        #     x.append(epoch)
+        # # method 2
+        # x.extend(epoch in range(1, config['train']['epochs'] + 1))
+        # # method 3
+        # x.extend(range(1, config['train']['epochs'] + 1))
+        # method 4
+
         if early_stop_patience >= early_stop_step:
             print('Early stop!')
             break
 
-    if args.ex_model_path != '': # export the model
-        print('Export the model...')
-        model_scripted = torch.jit.script(model) # Export to TorchScript
-        model_scripted.save(args.ex_model_path) # Save
+    x = list(range(1, config['train']['epochs'] + 1))
 
+    # plot
+    fig, ax = plt.subplots()
+
+    ax.plot(x, y, linewidth=2.0)
+
+    ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
+           ylim=(0, 8), yticks=np.arange(1, 8))
+
+    plt.show()
+
+    if args.ex_model_path != '':  # export the model
+        print('Export the model...')
+        model_scripted = torch.jit.script(model)  # Export to TorchScript
+        model_scripted.save(args.ex_model_path)  # Save
 
 # python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
 # --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
