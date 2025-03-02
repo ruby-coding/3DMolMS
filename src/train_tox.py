@@ -155,6 +155,8 @@ if __name__ == "__main__":
                         help='Path to export the whole model (structure & weights)')
     parser.add_argument('--validation_only', action='store_true',
                         help = 'Run validation only without training')
+    parser.add_argument('--plot', type = str, default = './plots',
+                        help = 'Directory to save the plot')
 
     parser.add_argument('--seed', type=int, default=42,
                         help='Seed for random functions')
@@ -309,7 +311,13 @@ if __name__ == "__main__":
     ax.set_title("Training vs Validation Loss")
     ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
            ylim=(0, 8), yticks=np.arange(1, 8))
-    plt.show()
+
+    plot_dir = args.plot_dir
+    os.makedirs(plot_dir, exist_ok=True)
+    plot_filename = os.path.join(plot_dir, 'training_vs_validation_loss.png')
+    fig.savefig(plot_filename)
+
+    print(f"Plot saved at {plot_filename}")
 
     if args.ex_model_path != '':
         print('Export the model...')
@@ -335,7 +343,8 @@ if __name__ == "__main__":
 # --model_config_path ./src/molnetpack/config/molnet_rt.yml \
 # --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
 # --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
-# --ex_model_path ./check_point/
+# --ex_model_path ./check_point/ \
+# --plot_dir ./my_custom_plot_dir
 
 # For validation only
 # python ./src/train_tox.py --validate_only \
