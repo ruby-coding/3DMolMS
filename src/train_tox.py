@@ -309,9 +309,8 @@ if __name__ == "__main__":
     ax.set_xlabel("Epochs")
     ax.set_ylabel("Loss")
     ax.set_title("Training vs Validation Loss")
-    ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
-           ylim=(0, 8), yticks=np.arange(1, 8))
 
+    ax.legend(loc="upper left")
     plot_dir = args.plot
     os.makedirs(plot_dir, exist_ok=True)
     plot_filename = os.path.join(plot_dir, 'training_vs_validation_loss.png')
