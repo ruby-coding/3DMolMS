@@ -219,14 +219,13 @@ if __name__ == "__main__":
     if args.transfer and args.resume_path != '':
         print("Loading pre-trained mdel from", args.resume_path)
 
-        # Load the pre-trained model weights from the checkpoint
         checkpoint = torch.load(args.resume_path)
         model.load_state_dict(checkpoint['model_state_dict'])
 
         print("Freezing encoder layers...")
         for name, param in model.named_parameters():
             if not name.startswith("decoder"):
-                param.requires_grad = False  # Freeze encoder
+                param.requires_grad = False
 
     # Ensure checkpoint path exists
     if args.checkpoint_path != '':
@@ -364,6 +363,5 @@ if __name__ == "__main__":
 # --model_config_path ./src/molnetpack/config/molnet_rt.yml \
 # --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
 # --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
-# --plot_dir ./my_custom_plot_dir \
 # --transfer \
 # --resume_path ./check_point/molnet_qtof_etkdgv3.pt
