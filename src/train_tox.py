@@ -299,8 +299,8 @@ if __name__ == "__main__":
 
     print(f"Final Validation Accuracy with Best Model: {final_valid_accuracy}")
 
-    x = list(range(1, config['train']['epochs'] + 1))
-
+    x = list(range(1, len(train_losses) + 1))
+    print(f"Epochs: {len(x)}, Train Losses: {len(train_losses)}, Valid Losses: {len(valid_losses)}")
     # Training loss
     fig, ax = plt.subplots()
     ax.plot(x, train_losses, linewidth = 2.0, label = "Training Loss", color = "blue")
