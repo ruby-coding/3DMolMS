@@ -204,7 +204,7 @@ if __name__ == "__main__":
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5,
                                                      patience=10)  # Accuracy should improve
 
-    # Load checkpoint if applicable
+    # Load checkpoint
     if args.resume_path != '':
         print("Loading checkpoint...")
         checkpoint = torch.load(args.resume_path, map_location=device)
@@ -215,16 +215,17 @@ if __name__ == "__main__":
     else:
         best_valid_accuracy = 0
 
-    # Handle transfer learning
+    # Transfer Learning
     if args.transfer and args.resume_path != '':
-        print("Loading pre-trained mdel from", args.resume_path)
+        print("Loading pre-trained model from", args.resume_path)
 
         checkpoint = torch.load(args.resume_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
+        encoder_state_dict = {k: v for k, v in checkpoint['model_state_dict'].items() if k.startswith("encoder")}
+        model.load_state_dict(encoder_state_dict, strict=False)
 
         print("Freezing encoder layers...")
         for name, param in model.named_parameters():
-            if not name.startswith("decoder"):
+            if not name.startswith("encoder"):
                 param.requires_grad = False
 
     # Ensure checkpoint path exists
@@ -267,11 +268,12 @@ if __name__ == "__main__":
                     'num_params': num_params
                 }
                 torch.save(checkpoint, args.checkpoint_path)
-            early_stop_patience = 0
-            print('Early stop patience reset')
-        else:
-            early_stop_patience += 1
-            print(f'Early stop count: {early_stop_patience}/{early_stop_step}')
+            print("Accuracy saved")
+        #     early_stop_patience = 0
+        #     print('Early stop patience reset')
+        # else:
+        #     early_stop_patience += 1
+        #     print(f'Early stop count: {early_stop_patience}/{early_stop_step}')
 
         # Reduce LR if validation accuracy does not improve
         scheduler.step(valid_accuracy)
@@ -287,9 +289,9 @@ if __name__ == "__main__":
         # x.extend(range(1, config['train']['epochs'] + 1))
         # method 4
 
-        if early_stop_patience >= early_stop_step:
-            print('Early stop!')
-            break
+        # if early_stop_patience >= early_stop_step:
+        #     print('Early stop!')
+        #     break
 
     # Load Best Saved Model & Validate Again
     print("Loading the bet saved model for final validation....")
