@@ -27,7 +27,7 @@ def get_lr(optimizer):
 def train_step(model, device, loader, optimizer, batch_size, num_points) -> tuple[int, int]:
     loss = 0
     accuracy = 0
-    criterion = nn.CrossEntropyLoss()  # Use CrossEntropyLoss for multi-class classification
+    criterion = nn.CrossEntropyLoss()  # CrossEntropyLoss for multi-class classification
 
     with tqdm(total=len(loader)) as bar:
         for step, batch in enumerate(loader):
@@ -47,7 +47,9 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
 
             # Compute loss
             batch_loss = criterion(pred, y)
-            loss += int(batch_loss)
+            # loss += int(batch_loss)
+            loss += batch_loss.item()
+            
 
             batch_loss.backward()
             optimizer.step()
@@ -202,36 +204,36 @@ if __name__ == "__main__":
     # 3. Optimizer & Scheduler
     optimizer = optim.AdamW(model.parameters(), lr=config['train']['lr'])
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5,
-                                                     patience=10)  # Accuracy should improve
+                                                     patience=10)  
 
-    # Load checkpoint
+      
+    # 4. Train  
     if args.resume_path != '':
-        print("Loading checkpoint...")
-        checkpoint = torch.load(args.resume_path, map_location=device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-        best_valid_accuracy = checkpoint['best_val_mae']
-    else:
-        best_valid_accuracy = 0
+        if args.transfer:
+            print("Load the pretrained encoder (freeze the encoder)...")
+            checkpoint = torch.load(args.resume_path, map_location=device)['model_state_dict']
+            encoder_dict = {}
+            for name, param in checkpoint.items():
+                # Load only encoder parameters (and possibly other non-task-specific layers)
+                if not name.startswith("decoder") and not name.startswith("classifier"):
+                    param.requires_grad = False  # Freeze the encoder parameter
+                    encoder_dict[name] = param
+            model.load_state_dict(encoder_dict, strict=False)
+            # Initialize best_valid_accuracy for training loop compatibility
+            best_valid_accuracy = 0
+        else:
+            print("Load the checkpoints...")
+            checkpoint = torch.load(args.resume_path, map_location=device)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            best_valid_accuracy = checkpoint['best_val_accuracy']  # Make sure key matches your saving code
 
-    # Transfer Learning
-    if args.transfer and args.resume_path != '':
-        print("Loading pre-trained model from", args.resume_path)
 
-        checkpoint = torch.load(args.resume_path)
-        encoder_state_dict = {k: v for k, v in checkpoint['model_state_dict'].items() if k.startswith("encoder")}
-        model.load_state_dict(encoder_state_dict, strict=False)
-
-        print("Freezing encoder layers...")
-        for name, param in model.named_parameters():
-            if not name.startswith("encoder"):
-                param.requires_grad = False
-
-    # Ensure checkpoint path exists
     if args.checkpoint_path != '':
-        checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
-        os.makedirs(checkpoint_dir, exist_ok=True)
+    	checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
+    	os.makedirs(checkpoint_dir, exist_ok = True)
+
 
     # Training loop
     early_stop_step = 30
