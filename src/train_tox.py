@@ -207,32 +207,31 @@ if __name__ == "__main__":
                                                      patience=10)  
 
       
-    # 4. Train  
+    # 4. Train
+    best_valid_accuracy = 0
     if args.resume_path != '':
         if args.transfer:
             print("Load the pretrained encoder (freeze the encoder)...")
             checkpoint = torch.load(args.resume_path, map_location=device)['model_state_dict']
             encoder_dict = {}
             for name, param in checkpoint.items():
-                # Load only encoder parameters (and possibly other non-task-specific layers)
                 if not name.startswith("decoder") and not name.startswith("classifier"):
-                    param.requires_grad = False  # Freeze the encoder parameter
+                    param.requires_grad = False
                     encoder_dict[name] = param
             model.load_state_dict(encoder_dict, strict=False)
-            # Initialize best_valid_accuracy for training loop compatibility
-            best_valid_accuracy = 0
+
         else:
             print("Load the checkpoints...")
             checkpoint = torch.load(args.resume_path, map_location=device)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-            best_valid_accuracy = checkpoint['best_val_accuracy']  # Make sure key matches your saving code
+            best_valid_accuracy = checkpoint['best_val_accuracy']
 
 
     if args.checkpoint_path != '':
-    	checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
-    	os.makedirs(checkpoint_dir, exist_ok = True)
+        checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
+        os.makedirs(checkpoint_dir, exist_ok = True)
 
 
     # Training loop
