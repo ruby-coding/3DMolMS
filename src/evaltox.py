@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 import argparse
-from your_model_script import MolNet_tox  # Replace with actual import
-from your_data_script import MolTox_Dataset  # Replace with actual import
+from molnetpack import MolNet_tox  # Replace with actual import
+from molnetpack import MolTox_Dataset  # Replace with actual import
 import yaml
 
 # Define argument parser for loading paths
