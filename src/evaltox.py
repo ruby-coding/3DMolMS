@@ -1,85 +1,67 @@
 import torch
-import argparse
-import numpy as np
-from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
 from torch.utils.data import DataLoader
-from molnetpack import MolTox_Dataset  # Ensure this is correctly imported
+import argparse
+from your_model_script import MolNet_tox  # Replace with actual import
+from your_data_script import MolTox_Dataset  # Replace with actual import
+import yaml
 
-# Argument parser for loading saved model
-parser = argparse.ArgumentParser(description="Evaluate trained model")
-parser.add_argument('--test_data', type=str, default='./data/cardio_toxicity_etkdgv3_test.pkl',
-                    help='Path to test data (pkl)')
-parser.add_argument('--ex_model_path', type=str, required=True,
-                    help='Path to exported model (TorchScript)')
-parser.add_argument('--batch_size', type=int, default=32,
-                    help='Batch size for evaluation')
-parser.add_argument('--device', type=int, default=0,
-                    help='Which GPU to use if any')
-parser.add_argument('--no_cuda', action='store_true',
-                    help='Disable CUDA')
+# Define argument parser for loading paths
+parser = argparse.ArgumentParser(description="Evaluate model accuracy from checkpoint")
+parser.add_argument('--checkpoint_path', type=str, required=True, help='Path to saved checkpoint')
+parser.add_argument('--test_data', type=str, required=True, help='Path to test data (pkl)')
+parser.add_argument('--model_config_path', type=str, required=True, help='Path to model config YAML file')
+parser.add_argument('--batch_size', type=int, default=32, help='Batch size for evaluation')
+parser.add_argument('--device', type=int, default=0, help='GPU device ID (use -1 for CPU)')
 args = parser.parse_args()
 
+# Load configuration
+with open(args.model_config_path, 'r') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+
 # Set device
-device = torch.device("cuda:" + str(args.device) if torch.cuda.is_available() and not args.no_cuda else "cpu")
-print(f"Using device: {device}")
+device = torch.device(f"cuda:{args.device}" if torch.cuda.is_available() and args.device >= 0 else "cpu")
 
-# Load the trained model
-print("Loading trained model...")
-model = torch.jit.load(args.ex_model_path, map_location=device)
-model.to(device)
-model.eval()
-print("Model successfully loaded!")
-print("Model")
-# Load test data
+# Load dataset
 test_set = MolTox_Dataset(args.test_data)
-test_loader = DataLoader(test_set, batch_size=config['train']['batch_size'], shuffle=False)
+test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 
-# Retrieve num_points from config (as done during training)
-num_points = config['model']['max_atom_num']
+# Load model
+model = MolNet_tox(config['model']).to(device)
 
-def evaluate_model(model, device, test_loader, num_points, num_classes=3):
-    y_true = []
-    y_pred = []
-    y_scores = []  # Store logits for AUROC calculation
+# Load checkpoint
+print(f"Loading model from {args.checkpoint_path}...")
+checkpoint = torch.load(args.checkpoint_path, map_location=device)
+model.load_state_dict(checkpoint['model_state_dict'])
+model.eval()
 
+# Evaluation function
+def evaluate_model(model, device, loader):
     model.eval()
+    total = 0
+    correct = 0
     with torch.no_grad():
-        for batch in test_loader:
-            _, x, features, y = batch  # Extract input & labels
+        for batch in loader:
+            _, x, features, y = batch  # Adjust this if your dataset has a different format
             x = x.to(device, dtype=torch.float)
-            x = x.permute(0, 2, 1)  # Ensure correct shape
-            y = y.to(device, dtype=torch.int)  # Convert labels to integers
-
-            # Correct the idx_base calculation using explicit num_points
-            idx_base = torch.arange(0, x.shape[0], device=device).view(-1, 1, 1) * num_points
+            x = x.permute(0, 2, 1)
+            y = y.to(device, dtype=torch.long)
 
             # Get predictions
-            pred_logits = model(x, None, idx_base)  # Get raw logits
-            pred_probs = torch.softmax(pred_logits, dim=1)  # Convert logits to probabilities
-            pred_classes = torch.argmax(pred_probs, dim=1)  # Convert probabilities to class predictions
+            outputs = model(x, None, None)
+            predicted = torch.argmax(outputs, dim=1)
+            correct += (predicted == y).sum().item()
+            total += y.size(0)
 
-            y_true.extend(y.cpu().numpy())
-            y_pred.extend(pred_classes.cpu().numpy())
-            y_scores.extend(pred_probs.cpu().numpy())  # Save probability scores for AUROC
-
-    # Compute confusion matrix
-    conf_matrix = confusion_matrix(y_true, y_pred)
-    print("\nConfusion Matrix:\n", conf_matrix)
-
-    # Compute precision, recall, F1-score
-    report = classification_report(y_true, y_pred, digits=4)
-    print("\nClassification Report:\n", report)
-
-    # Compute AUROC (if applicable)
-    auc_score = None
-    try:
-        y_true_one_hot = np.eye(num_classes)[y_true]  # Convert labels to one-hot
-        auc_score = roc_auc_score(y_true_one_hot, y_scores, multi_class="ovr")
-        print(f"\nAUROC Score: {auc_score:.4f}")
-    except ValueError:
-        print("\nAUROC computation failed (likely due to missing classes in dataset).")
-
-    return conf_matrix, auc_score
+    accuracy = correct / total
+    return accuracy
 
 # Run evaluation
-conf_matrix, auc_score = evaluate_model(model, device, test_loader, num_points)
+accuracy = evaluate_model(model, device, test_loader)
+print(f"Model Accuracy on Test Set: {accuracy:.4f}")
+#
+# python evaluate.py --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
+#                    --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
+#                    --model_config_path ./src/molnetpack/config/molnet_rt.yml \
+#                    --batch_size 32 \
+#                    --device 0
+
