@@ -164,6 +164,8 @@ if __name__ == "__main__":
 		assert os.path.exists(os.path.join(args.raw_dir, 'allccs_download.csv'))
 	if 'cardio_toxicity' in args.dataset:
 		assert os.path.exists(os.path.join(args.raw_dir, 'cardio_toxicity.csv'))
+	if 'increase_mitochondrial_dysfunction' in args.dataset:
+		assert os.path.exists(os.path.join(args.raw_dir, 'increase_mitochondrial_dysfunction.csv'))
 	
 	# load the configurations
 	with open(args.data_config_path, 'r') as f: 
@@ -261,6 +263,39 @@ if __name__ == "__main__":
 
 		train_data = csv2arr(train_df, config['encoding'])
 		out_path = os.path.join(args.pkl_dir, 'cardio_toxicity_{}_train.pkl'.format(config['encoding']['conf_type']))
+		with open(out_path, 'wb') as f:
+			pickle.dump(train_data, f)
+			print('Save {}'.format(out_path))
+
+	if 'increase_mitochondrial_dysfunction' in args.dataset:
+		print('\n>>> Step 1: load the dataset;')
+		df = pd.read_csv(os.path.join(args.raw_dir, 'increase_mitochondrial_dysfunction.csv'))
+		df = df.dropna(subset=['smiles', 'labels'])
+		print('Load {} data from Increase Mitochondrial Dysfunction Dataset...'.format(len(df)))
+
+		print('\n>>> Step 2: filter out invalid molecules; randomly split SMILES into training and test sets;')
+		df['valid'] = df['smiles'].apply(
+			lambda x: check_atom(x, config['increase_mitochondrial_dysfunction'], in_type='smiles'))
+		df = df[df['valid'] == True]
+
+		test_ratio = 0.1
+		df = df.sample(frac=1).reset_index(drop=True)  # Shuffle dataset
+		test_size = int(len(df) * test_ratio)
+		test_df = df.iloc[:test_size]
+		train_df = df.iloc[test_size:]
+		print('Get {} test data and {} training data'.format(len(test_df), len(train_df)))
+
+		print('\n>>> Step 3: encode all the data into pkl format;')
+		test_data = csv2arr(test_df, config['encoding'])
+		out_path = os.path.join(args.pkl_dir, 'increase_mitochondrial_dysfunction_{}_test.pkl'.format(
+			config['encoding']['conf_type']))
+		with open(out_path, 'wb') as f:
+			pickle.dump(test_data, f)
+			print('Save {}'.format(out_path))
+
+		train_data = csv2arr(train_df, config['encoding'])
+		out_path = os.path.join(args.pkl_dir, 'increase_mitochondrial_dysfunction_{}_train.pkl'.format(
+			config['encoding']['conf_type']))
 		with open(out_path, 'wb') as f:
 			pickle.dump(train_data, f)
 			print('Save {}'.format(out_path))
