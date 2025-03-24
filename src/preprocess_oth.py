@@ -152,7 +152,7 @@ if __name__ == "__main__":
 						help='path to raw data')
 	parser.add_argument('--pkl_dir', type=str, default='./data/',
 						help='path to pkl data')
-	parser.add_argument('--dataset', type=str, nargs='+', required=True, choices=['metlin', 'allccs', 'cardio_toxicity'],
+	parser.add_argument('--dataset', type=str, nargs='+', required=True, choices=['metlin', 'allccs', 'cardio_toxicity','increase_mitochondrial_dysfunction'],
 						help='dataset name')
 	parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
 						help='path to configuration')
@@ -278,7 +278,7 @@ if __name__ == "__main__":
 			lambda x: check_atom(x, config['increase_mitochondrial_dysfunction'], in_type='smiles'))
 		df = df[df['valid'] == True]
 
-		test_ratio = 0.1
+		test_ratio = 0.2
 		df = df.sample(frac=1).reset_index(drop=True)  # Shuffle dataset
 		test_size = int(len(df) * test_ratio)
 		test_df = df.iloc[:test_size]

@@ -159,8 +159,11 @@ def filter_mol(suppl, config):
 
 def check_atom(x, config, in_type='smiles'):
 	assert in_type in ['smiles', 'mol', 'molh']
-	if in_type == 'smiles': 
-		mol = Chem.AddHs(Chem.MolFromSmiles(x))
+	if in_type == 'smiles':
+		mol = Chem.MolFromSmiles(x)
+		if mol is None:
+			return -3
+		mol = Chem.AddHs(mol)
 	elif in_type == 'mol': 
 		mol = Chem.AddHs(x)
 	else:
