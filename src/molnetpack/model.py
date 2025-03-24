@@ -459,7 +459,7 @@ class MolNet_Oth(nn.Module):
 
 class MolNet_tox2(nn.Module):
     def __init__(self, config):
-        super(MolNet_tox, self).__init__()
+        super(MolNet_tox2, self).__init__()
         self.add_num = config['add_num']
         self.encoder = Encoder(
             in_dim=int(config['in_dim']),
@@ -516,9 +516,9 @@ class MolNet_tox2(nn.Module):
 
 
 
-class MolNet_tox(nn.Module):
+class Molnet_Tox2(nn.Module):
     def __init__(self, config):
-        super(MolNet_tox, self).__init__()
+        super(Molnet_Tox2, self).__init__()
         self.add_num = config['add_num']
         self.encoder = Encoder(in_dim=int(config['in_dim']),
                                layers=config['encode_layers'],
@@ -573,7 +573,7 @@ class MolNet_tox(nn.Module):
 
 class MolNet_tox1(nn.Module):
     def __init__(self, config):
-        super(MolNet_tox, self).__init__()
+        super(Molnet_Tox2, self).__init__()
         self.add_num = config['add_num']
         self.encoder = Encoder(in_dim=int(config['in_dim']),
                                layers=config['encode_layers'],

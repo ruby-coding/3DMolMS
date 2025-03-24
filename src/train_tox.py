@@ -15,7 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from molnetpack import MolNet_tox1
+from molnetpack import Molnet_Tox2
 from molnetpack import MolTox_Dataset
 
 
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         "cuda:" + str(args.device)) if torch.cuda.is_available() and not args.no_cuda else torch.device("cpu")
     print(f'Device: {device}')
 
-    model = MolNet_tox1(config['model']).to(device)
+    model = Molnet_Tox2(config['model']).to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f'{str(model)} #Params: {num_params}')
 
