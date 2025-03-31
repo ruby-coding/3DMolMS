@@ -110,15 +110,15 @@ def init_random_seed(seed):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Molecular Retention Time Prediction (Train)')
-    parser.add_argument('--train_data', type=str, default='./data/cardio_toxicity_etkdgv3_train.pkl',
+    parser.add_argument('--train_data', type=str, default='./data/increase_mitochondrial_dysfunction_etkdgv3_train.pkl',
                         help='path to training data (pkl)')
-    parser.add_argument('--test_data', type=str, default='./data/cardio_toxicity_etkdgv3_test.pkl',
+    parser.add_argument('--test_data', type=str, default='./data/increase_mitochondrial_dysfunction_etkdgv3_test.pkl',
                         help='path to test data (pkl)')
     parser.add_argument('--model_config_path', type=str, default='./src/molnetpack/config/molnet_rt.yml',
                         help='path to model and training configuration')
     parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
                         help='path to configuration')
-    parser.add_argument('--checkpoint_path', type=str, default='./check_point/molnet_rt_etkdgv3.pt',
+    parser.add_argument('--checkpoint_path', type=str, default='./check_point/molnet_mito_dys_etkdgv3.pt',
                         help='Path to save checkpoint')
     parser.add_argument('--resume_path', type=str, default='',
                         help='Path to pretrained model')
