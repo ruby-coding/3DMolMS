@@ -456,69 +456,9 @@ class MolNet_Oth(nn.Module):
 # -------------------------------------------------------------------------
 # >>>                             3DMol_tox                             <<<
 # -------------------------------------------------------------------------
-
-class MolNet_tox2(nn.Module):
+class MolnetTox_bin(nn.Module):
     def __init__(self, config):
-        super(MolNet_tox2, self).__init__()
-        self.add_num = config['add_num']
-        self.encoder = Encoder(
-            in_dim=int(config['in_dim']),
-            layers=config['encode_layers'],
-            emb_dim=int(config['emb_dim']),
-            k=int(config['k'])
-        )
-        self.decoder = MSDecoder(
-            in_dim=int(config['emb_dim'] + config['add_num']),
-            layers=config['decode_layers'],
-            out_dim=1,  # Single output for binary classification
-            dropout=config['dropout']
-        )
-
-        # (Optional) Additional classification layer – you can remove this if not needed.
-        self.classifier = nn.Linear(1, 1)
-
-        # Initialize weights for convolutional, batchnorm, and linear layers.
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d):
-                nn.init.kaiming_normal_(m.weight, a=0.2, mode='fan_in', nonlinearity='leaky_relu')
-            elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm)):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                m.weight.data.normal_(mean=0.0, std=1.0)
-                if m.bias is not None:
-                    m.bias.data.zero_()
-
-    def forward(self, x: torch.Tensor, env: torch.Tensor, idx_base: torch.Tensor) -> torch.Tensor:
-        """
-        Input:
-            x:      point set, torch.Size([batch_size, 14, atom_num])
-            env:    experimental condition
-            idx_base:   indices for local kNN
-        """
-        x = self.encoder(x, idx_base)  # Shape: [batch_size, emb_dim]
-
-        # Add the additional encoded information
-        if self.add_num == 1:
-            x = torch.cat((x, torch.unsqueeze(env, 1)), dim=1)
-        elif self.add_num > 1:
-            x = torch.cat((x, env), dim=1)
-
-        # Pass through the decoder
-        x = self.decoder(x)
-
-        # If using an extra classification layer
-        x = self.classifier(x)
-
-        # Apply sigmoid to get a probability between 0 and 1
-        x = torch.sigmoid(x)
-        return x
-
-
-
-class Molnet_Tox2(nn.Module):
-    def __init__(self, config):
-        super(Molnet_Tox2, self).__init__()
+        super(MolnetTox_bin, self).__init__()
         self.add_num = config['add_num']
         self.encoder = Encoder(in_dim=int(config['in_dim']),
                                layers=config['encode_layers'],
@@ -529,8 +469,8 @@ class Molnet_Tox2(nn.Module):
                                  out_dim=3,  # Decoder outputs a single value
                                  dropout=config['dropout'])
 
-        # Additional classification layer
-        self.classifier = nn.Linear(3,3)  # Fully connected layer for binary classification
+
+        self.classifier = nn.Linear(3, 1)
 
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
@@ -552,76 +492,15 @@ class Molnet_Tox2(nn.Module):
             env:    experimental condition
             idx_base:   idx for local knn
         '''
-        x = self.encoder(x, idx_base)  # torch.Size([batch_size, emb_dim])
+        x = self.encoder(x, idx_base)
 
-        # Add the encoded adduct
         if self.add_num == 1:
             x = torch.cat((x, torch.unsqueeze(env, 1)), 1)
         elif self.add_num > 1:
             x = torch.cat((x, env), 1)
 
-        # Decoder
         x = self.decoder(x)
 
-        # Classification layer
-        x = self.classifier(x)
+        logits = self.classifier(x)
 
-        # Apply softmax for multi-class classification
-        x = torch.softmax(x, dim=1)
-
-        return x
-
-class MolNet_tox1(nn.Module):
-    def __init__(self, config):
-        super(Molnet_Tox2, self).__init__()
-        self.add_num = config['add_num']
-        self.encoder = Encoder(in_dim=int(config['in_dim']),
-                               layers=config['encode_layers'],
-                               emb_dim=int(config['emb_dim']),
-                               k=int(config['k']))
-        self.decoder = MSDecoder(in_dim=int(config['emb_dim'] + config['add_num']),
-                                 layers=config['decode_layers'],
-                                 out_dim=3,  # Decoder outputs a single value
-                                 dropout=config['dropout'])
-
-        # Additional classification layer
-        self.classifier = nn.Linear(3,1)  # Fully connected layer for binary classification
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d):
-                nn.init.kaiming_normal_(m.weight, a=0.2, mode='fan_in', nonlinearity='leaky_relu')
-            elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm)):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                m.weight.data.normal_(mean=0.0, std=1.0)
-                if m.bias is not None:
-                    m.bias.data.zero_()
-
-    def forward(self, x: torch.Tensor,
-                env: torch.Tensor,
-                idx_base: torch.Tensor) -> torch.Tensor:
-        '''
-        Input:
-            x:      point set, torch.Size([batch_size, 14, atom_num])
-            env:    experimental condition
-            idx_base:   idx for local knn
-        '''
-        x = self.encoder(x, idx_base)  # torch.Size([batch_size, emb_dim])
-
-        # Add the encoded adduct
-        if self.add_num == 1:
-            x = torch.cat((x, torch.unsqueeze(env, 1)), 1)
-        elif self.add_num > 1:
-            x = torch.cat((x, env), 1)
-
-        # Decoder
-        x = self.decoder(x)
-
-        # Classification layer
-        x = self.classifier(x)
-
-        # Apply softmax for multi-class classification
-        x = torch.sigmoid(x)
-
-        return x
+        return logits

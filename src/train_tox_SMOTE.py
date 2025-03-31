@@ -4,7 +4,10 @@ LastEditors: yuhhong
 LastEditTime: 2023-10-20 17:16:17
 '''
 import os
+os.environ["SCIPY_ARRAY_API"] = "1"
 import argparse
+import sys
+
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
@@ -13,9 +16,10 @@ import yaml
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
+from imblearn.over_sampling import SMOTE
 
-from molnetpack import MolNet_tox
+from molnetpack import MolnetTox_bin
 from molnetpack import MolTox_Dataset
 
 
@@ -24,21 +28,20 @@ def get_lr(optimizer):
         return param_group['lr']
 
 
-def train_step(model, device, loader, optimizer, batch_size, num_points) -> tuple[int, int]:
+def train_step(model, device, loader, optimizer, batch_size, num_points) -> tuple[float, float]:
     loss = 0
     accuracy = 0
-    criterion = nn.BCEWithLogitsLoss()  # CrossEntropyLoss for multi-class classification
+    criterion = nn.BCEWithLogitsLoss()
 
     with tqdm(total=len(loader)) as bar:
         for step, batch in enumerate(loader):
             print(f"Batch structure: {len(batch)}")
-            _, x, features, y = batch
+            x, y = batch
             x = x.to(device=device, dtype=torch.float)
             print(x.size())
             x = x.permute(0, 2, 1)
 
             y = y.to(device, dtype=torch.float).view(-1, 1)  # Ensure shape matches (batch_size, 1)
-
 
             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
@@ -48,9 +51,7 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
 
             # Compute loss
             batch_loss = criterion(pred, y)
-            # loss += int(batch_loss)
-            loss += batch_loss.item()
-            
+            loss += int(batch_loss)
 
             batch_loss.backward()
             optimizer.step()
@@ -67,65 +68,33 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
     return accuracy / (step + 1), loss / (step + 1)
 
 
-# def train_step(model, device, loader, optimizer, batch_size, num_points):
-#     accuracy = 0
-#     with tqdm(total=len(loader)) as bar:
-#         for step, batch in enumerate(loader):
-#             print(f"Batch structure: {len(batch)}")
-#             _, x, features, y = batch
-#             x = x.to(device=device, dtype=torch.float)
-#             print(x.size())
-#             x = x.permute(0, 2, 1)
-#             y = y.to(device=device, dtype=torch.float).view(-1, 1)  # Ensure shape is [batch_size, 1]
-#
-#             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
-#
-#             optimizer.zero_grad()
-#             model.train()
-#             pred = model(x, None, idx_base)  # `pred` should be logits, not probabilities
-#
-#             # Use BCEWithLogitsLoss for numerical stability
-#             loss_fn = nn.BCEWithLogitsLoss()
-#             loss = loss_fn(pred, y)
-#
-#             loss.backward()
-#             optimizer.step()
-#
-#             # Convert logits to probabilities for accuracy calculation
-#             pred_binary = torch.sigmoid(pred).round()  # Converts logits to 0 or 1
-#             accuracy += (pred_binary == y).float().mean().item()  # Compute accuracy
-#
-#             bar.set_description('Train')
-#             bar.set_postfix(lr=get_lr(optimizer), loss=loss.item())
-#             bar.update(1)
-#
-#     return accuracy / (step + 1)  # Return average accuracy over all batches
-
 def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_points):
     model.eval()
     accuracy = 0
     total = 0
     val_loss = 0
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     with tqdm(total=len(loader)) as bar:
         for step, batch in enumerate(loader):
             _, x, features, y = batch
             x = x.to(device=device, dtype=torch.float)
             x = x.permute(0, 2, 1)
-            y = y.to(device=device, dtype=torch.long)
+            y = y.to(device=device, dtype=torch.float).view(batch_size, 1)
+
             idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
             with torch.no_grad():
-                pred = model(x, None, idx_base)
-                batch_loss = criterion(pred, y)
+                logits = model(x, None, idx_base)
+                batch_loss = criterion(logits, y)
 
-            _, predicted = torch.max(pred, 1)
+                probs = torch.sigmoid(logits)
+                preds = (probs > 0.5).float()
 
-            correct = (predicted == y).sum().item()
-            accuracy += correct
-            total += y.size(0)
-            val_loss += batch_loss.item()
+                correct = (preds == y).float().sum().item()
+                accuracy += correct
+                total += y.size(0)
+                val_loss += batch_loss.item()
 
             bar.set_description('Eval')
             bar.update(1)
@@ -137,6 +106,7 @@ def init_random_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Molecular Retention Time Prediction (Train)')
@@ -157,9 +127,10 @@ if __name__ == "__main__":
     parser.add_argument('--ex_model_path', type=str, default='',
                         help='Path to export the whole model (structure & weights)')
     parser.add_argument('--validation_only', action='store_true',
-                        help = 'Run validation only without training')
-    parser.add_argument('--plot', type = str, default = './plots',
-                        help = 'Directory to save the plot')
+                        help='Run validation only without training')
+    parser.add_argument('--plot', type=str, default='./plots',
+                        help='Directory to save the plot')
+    parser.add_argument('--eval_only', action='store_true', help="Only evaluate the model without training")
 
     parser.add_argument('--seed', type=int, default=42,
                         help='Seed for random functions')
@@ -167,6 +138,8 @@ if __name__ == "__main__":
                         help='Which gpu to use if any')
     parser.add_argument('--no_cuda', type=bool, default=False,
                         help='Enables CUDA training')
+
+    parser.add_argument('--debug', action='store_true', help='Run in debug mode')
     args = parser.parse_args()
 
     init_random_seed(args.seed)
@@ -179,8 +152,42 @@ if __name__ == "__main__":
 
     # 1. Data
     train_set = MolTox_Dataset(args.train_data)
+
+
+
+    X = []
+    y = []
+
+    for i in range(len(train_set)):
+        _, x_i, _, y_i = train_set[i]
+
+            #print("X shape before:", x_i.shape)
+           # print("y shape before:", y_i.shape)
+
+        X.append(x_i.flatten())
+        y.append(y_i)
+
+            #print("X shape after flat:", x_i.flatten().shape)
+           # print("y shape flat:", y_i.shape)
+    X = np.stack(X)
+    y = np.stack(y)
+
+    smote = SMOTE(random_state = args.seed)
+    X_resampled, y_resampled = smote.fit_resample(X, y)
+
+
+
+    # print("X shape:", X_resampled.shape)
+    # print("y shape:", y_resampled.shape)
+    # sys.exit(0)
+
+    X_tensor = torch.tensor(X_resampled, dtype=torch.float32).view(-1, 300, 21)
+    y_tensor = torch.tensor(y_resampled, dtype=torch.float32)
+
+    data_set_smote = TensorDataset(X_tensor, y_tensor)
+
     train_loader = DataLoader(
-        train_set,
+        data_set_smote,
         batch_size=config['train']['batch_size'],
         shuffle=True,
         num_workers=config['train']['num_workers'],
@@ -198,16 +205,35 @@ if __name__ == "__main__":
         "cuda:" + str(args.device)) if torch.cuda.is_available() and not args.no_cuda else torch.device("cpu")
     print(f'Device: {device}')
 
-    model = MolNet_tox(config['model']).to(device)
+    model = MolnetTox_bin(config['model']).to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f'{str(model)} #Params: {num_params}')
+
+    if args.eval_only:
+        print("Loading trained model for evaluation...")
+        checkpoint = torch.load(args.checkpoint_path, map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.to(device)
+        model.eval()
+
+        # Evaluate on test data
+        test_accuracy, test_loss = eval_step(
+            model=model,
+            device=device,
+            loader=valid_loader,
+            batch_size=config['train']['batch_size'],
+            num_points=config['model']['max_atom_num']
+        )
+
+        print(f"Test Accuracy: {test_accuracy:.4f}")
+        print(f"Test Loss: {test_loss:.4f}")
+        sys.exit()
 
     # 3. Optimizer & Scheduler
     optimizer = optim.AdamW(model.parameters(), lr=config['train']['lr'])
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5,
-                                                     patience=10)  
+                                                     patience=10)
 
-      
     # 4. Train
     best_valid_accuracy = 0
     if args.resume_path != '':
@@ -229,11 +255,9 @@ if __name__ == "__main__":
             scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
             best_valid_accuracy = checkpoint['best_val_accuracy']
 
-
     if args.checkpoint_path != '':
         checkpoint_dir = "/".join(args.checkpoint_path.split('/')[:-1])
-        os.makedirs(checkpoint_dir, exist_ok = True)
-
+        os.makedirs(checkpoint_dir, exist_ok=True)
 
     # Training loop
     early_stop_step = 30
@@ -242,16 +266,17 @@ if __name__ == "__main__":
     train_losses = []
     valid_losses = []
 
-
     for epoch in range(1, config['train']['epochs'] + 1):
         print("\n=====Epoch {}".format(epoch))
         train_accuracy, train_loss = train_step(model, device, train_loader, optimizer,
                                                 batch_size=config['train']['batch_size'],
                                                 num_points=config['model']['max_atom_num'])
         valid_accuracy, valid_loss = eval_step(model, device, valid_loader,
-                                   batch_size=config['train']['batch_size'], num_points=config['model']['max_atom_num'])
+                                               batch_size=config['train']['batch_size'],
+                                               num_points=config['model']['max_atom_num'])
 
-        print(f"Train: Accuracy: {train_accuracy}, Loss: {train_loss} \nValidation: Accuracy: {valid_accuracy}, Loss: {valid_loss}")
+        print(
+            f"Train: Accuracy: {train_accuracy}, Loss: {train_loss} \nValidation: Accuracy: {valid_accuracy}, Loss: {valid_loss}")
 
         train_losses.append(train_loss)
         valid_losses.append(valid_loss)
@@ -271,49 +296,17 @@ if __name__ == "__main__":
                 }
                 torch.save(checkpoint, args.checkpoint_path)
             print("Accuracy saved")
-        #     early_stop_patience = 0
-        #     print('Early stop patience reset')
-        # else:
-        #     early_stop_patience += 1
-        #     print(f'Early stop count: {early_stop_patience}/{early_stop_step}')
 
-        # Reduce LR if validation accuracy does not improve
         scheduler.step(valid_accuracy)
 
         print(f'Best accuracy so far: {best_valid_accuracy}')
-
-        # # method 1
-        # for epoch in range(1, config['train']['epochs'] + 1):
-        #     x.append(epoch)
-        # # method 2
-        # x.extend(epoch in range(1, config['train']['epochs'] + 1))
-        # # method 3
-        # x.extend(range(1, config['train']['epochs'] + 1))
-        # method 4
-
-        # if early_stop_patience >= early_stop_step:
-        #     print('Early stop!')
-        #     break
-
-    # Load Best Saved Model & Validate Again
-    print("Loading the bet saved model for final validation....")
-    checkpoint = torch.load(args.checkpoint_path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    model.eval()
-
-    # Final validation with the loaded model
-    final_valid_accuracy = eval_step(model, device, valid_loader,
-                                     batch_size = config['train']['batch_size'],
-                                     num_points = config['model']['max_atom_num'])
-
-    print(f"Final Validation Accuracy with Best Model: {final_valid_accuracy}")
 
     x = list(range(1, len(train_losses) + 1))
     print(f"Epochs: {len(x)}, Train Losses: {len(train_losses)}, Valid Losses: {len(valid_losses)}")
     # Training loss
     fig, ax = plt.subplots()
-    ax.plot(x, train_losses, linewidth = 2.0, label = "Training Loss", color = "blue")
-    ax.plot(x, valid_losses, linewidth = 2.0, label = "Validation Loss", color = "red")
+    ax.plot(x, train_losses, linewidth=2.0, label="Training Loss", color="blue")
+    ax.plot(x, valid_losses, linewidth=2.0, label="Validation Loss", color="red")
 
     ax.set_xlabel("Epochs")
     ax.set_ylabel("Loss")
@@ -332,40 +325,3 @@ if __name__ == "__main__":
         model_scripted = torch.jit.script(model)
         model_scripted.save(args.ex_model_path)
         print(f"Model exported to {args.ex_model_path}")
-
-    if args.validation_only:
-        print("Running validation...")
-        print(f"Loading model from {args.checkpoint_path}...")
-        checkpoint = torch.load(args.checkpoint_path, map_location = device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.eval()
-
-        final_validation = eval_step(model, device, valid_loader,
-                                     batch_size = config['train']['batch_size'],
-                                     num_points = config['model']['max_atom_num'])
-        print(f"Final Validation Accuracy: {final_valid_accuracy}")
-
-        exit()
-# python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
-# --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
-# --model_config_path ./src/molnetpack/config/molnet_rt.yml \
-# --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
-# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
-# --ex_model_path ./check_point/ \
-# --plot_dir ./my_custom_plot_dir
-
-# For validation only
-# python ./src/train_tox.py --validate_only \
-# --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
-# --model_config_path ./src/molnetpack/config/molnet_rt.yml \
-# --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
-# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt
-
-# For transfer learning
-# python ./src/train_tox.py --train_data ./data/cardio_toxicity_etkdgv3_train.pkl \
-# --test_data ./data/cardio_toxicity_etkdgv3_test.pkl \
-# --model_config_path ./src/molnetpack/config/molnet_rt.yml \
-# --data_config_path ./src/molnetpack/config/preprocess_etkdgv3.yml \
-# --checkpoint_path ./check_point/molnet_rt_etkdgv3.pt \
-# --transfer \
-# --resume_path ./check_point/molnet_qtof_etkdgv3.pt
