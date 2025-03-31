@@ -29,8 +29,8 @@ def get_lr(optimizer):
 
 
 def train_step(model, device, loader, optimizer, batch_size, num_points) -> tuple[float, float]:
-    loss = 0
-    accuracy = 0
+    total_loss = 0
+    total_accuracy = 0
     criterion = nn.BCEWithLogitsLoss()
 
     with tqdm(total=len(loader)) as bar:
@@ -51,7 +51,7 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
 
             # Compute loss
             batch_loss = criterion(pred, y)
-            loss += int(batch_loss)
+            total_loss += batch_loss.item()
 
             batch_loss.backward()
             optimizer.step()
@@ -59,13 +59,13 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
             # Compute accuracy
             pred_class = (pred >= 0.5).float()
             batch_accuracy = (pred_class == y).float().mean().item()
-            accuracy += batch_accuracy
+            total_accuracy += batch_accuracy
 
             bar.set_description('Train')
             bar.set_postfix(lr=get_lr(optimizer), loss=batch_loss.item(), acc=batch_accuracy)
             bar.update(1)
 
-    return accuracy / (step + 1), loss / (step + 1)
+    return total_accuracy / (step + 1), total_loss / (step + 1)
 
 
 def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_points):
