@@ -18,6 +18,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from imblearn.over_sampling import SMOTE
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, matthews_corrcoef, confusion_matrix
 
 from molnetpack import MolnetTox_bin
 from molnetpack import MolTox_Dataset
@@ -35,10 +36,10 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
 
     with tqdm(total=len(loader)) as bar:
         for step, batch in enumerate(loader):
-            print(f"Batch structure: {len(batch)}")
+            #print(f"Batch structure: {len(batch)}")
             x, y = batch
             x = x.to(device=device, dtype=torch.float)
-            print(x.size())
+            #print(x.size())
             x = x.permute(0, 2, 1)
 
             y = y.to(device, dtype=torch.float).view(-1, 1)  # Ensure shape matches (batch_size, 1)
@@ -66,6 +67,39 @@ def train_step(model, device, loader, optimizer, batch_size, num_points) -> tupl
             bar.update(1)
 
     return total_accuracy / (step + 1), total_loss / (step + 1)
+
+def evaluate_model_metrics(model, device, loader: DataLoader, num_points: int):
+    model.eval()
+    all_preds = []
+    all_targets = []
+
+    with torch.no_grad():
+        for batch in loader:
+            _, x, _, y = batch  
+            x = x.to(device).float().permute(0, 2, 1)
+            y = y.to(device).float().view(-1)
+
+            idx_base = torch.arange(0, x.size(0), device=device).view(-1, 1, 1) * num_points
+            outputs = model(x, None, idx_base).squeeze()
+
+            preds = (torch.sigmoid(outputs) > 0.5).float()
+
+            all_preds.extend(preds.cpu().numpy())
+            all_targets.extend(y.cpu().numpy())
+
+    y_true = np.array(all_targets)
+    y_pred = np.array(all_preds)
+
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+
+    return {
+        "Accuracy": accuracy_score(y_true, y_pred),
+        "Precision": precision_score(y_true, y_pred, zero_division=0),
+        "Recall (Sensitivity)": recall_score(y_true, y_pred, zero_division=0),
+        "Specificity": tn / (tn + fp) if (tn + fp) > 0 else 0,
+        "F1 Score": f1_score(y_true, y_pred, zero_division=0),
+        "MCC": matthews_corrcoef(y_true, y_pred)
+    }
 
 
 def eval_step(model: nn.Module, device, loader: DataLoader, batch_size, num_points):
@@ -118,7 +152,7 @@ if __name__ == "__main__":
                         help='path to model and training configuration')
     parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
                         help='path to configuration')
-    parser.add_argument('--checkpoint_path', type=str, default='./check_point/molnet_mito_dys_etkdgv3.pt',
+    parser.add_argument('--checkpoint_path', type=str, default='./check_point/molnet_mito_dys1_etkdgv3.pt',
                         help='Path to save checkpoint')
     parser.add_argument('--resume_path', type=str, default='',
                         help='Path to pretrained model')
@@ -131,6 +165,8 @@ if __name__ == "__main__":
     parser.add_argument('--plot', type=str, default='./plots',
                         help='Directory to save the plot')
     parser.add_argument('--eval_only', action='store_true', help="Only evaluate the model without training")
+    parser.add_argument('--eval_only_metrics', action='store_true', help="Only evaluate the model with metrics without training")
+
 
     parser.add_argument('--seed', type=int, default=42,
                         help='Seed for random functions')
@@ -229,6 +265,48 @@ if __name__ == "__main__":
         print(f"Test Loss: {test_loss:.4f}")
         sys.exit()
 
+    if args.eval_only_metrics:
+        print("Loading trained model for evaluation...")
+    
+        # Load model config
+        with open(args.model_config_path, 'r') as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+    
+        # Set device
+        device = torch.device(f"cuda:{args.device}" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+        print(f"Device: {device}")
+    
+        # Load model
+        model = MolnetTox_bin(config['model']).to(device)
+        checkpoint = torch.load(args.checkpoint_path, map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+    
+        # Load test set
+        valid_set = MolTox_Dataset(args.test_data)
+        valid_loader = DataLoader(
+            valid_set,
+            batch_size=config['train']['batch_size'],
+            shuffle=False,
+            num_workers=config['train']['num_workers'],
+            drop_last=False
+        )
+    
+        # Infer num_points from a sample
+        sample_batch = next(iter(valid_loader))
+        _, x_sample, _, _ = sample_batch
+        num_points = x_sample.shape[1]
+    
+        # Run evaluation
+        metrics = evaluate_model_metrics(model, device, valid_loader, num_points)
+    
+        print("\nEvaluation Metrics:")
+        for name, value in metrics.items():
+            print(f"{name}: {value:.4f}")
+    
+        sys.exit()
+
+
     # 3. Optimizer & Scheduler
     optimizer = optim.AdamW(model.parameters(), lr=config['train']['lr'])
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5,
@@ -296,13 +374,22 @@ if __name__ == "__main__":
                 }
                 torch.save(checkpoint, args.checkpoint_path)
             print("Accuracy saved")
+            early_stop_patience = 0 
+        else:
+            early_stop_patience += 1
+            print(f"No improvement for {early_stop_patience}/{early_stop_step} epochs")
 
         scheduler.step(valid_accuracy)
+
+        # if early_stop_patience >= early_stop_step:
+        #     print(f"Early stopping triggered at epoch {epoch}")
+        #     break
 
         print(f'Best accuracy so far: {best_valid_accuracy}')
 
     x = list(range(1, len(train_losses) + 1))
     print(f"Epochs: {len(x)}, Train Losses: {len(train_losses)}, Valid Losses: {len(valid_losses)}")
+    
     # Training loss
     fig, ax = plt.subplots()
     ax.plot(x, train_losses, linewidth=2.0, label="Training Loss", color="blue")
