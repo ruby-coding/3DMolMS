@@ -132,7 +132,7 @@ cardio_toxicity:
 increase_mitochondrial_dysfunction:
     atom_type: [ 'C', 'O', 'N', 'H', 'P', 'S', 'F', 'Cl', 'B', 'Br', 'I' ]
     max_atom_num: 300
-    min_atom_num: 10
+    min_atom_num: 3
 
 # retention time ===============================================================
 metlin_rt:

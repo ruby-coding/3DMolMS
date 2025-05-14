@@ -24,6 +24,16 @@ def check_valid_smiles(smiles):
 	return mol is not None
 
 
+def random_split_df(df, test_ratio=0.1):
+	smiles_list = df['smiles'].drop_duplicates().tolist()
+	test_smiles = np.random.choice(smiles_list, int(len(smiles_list) * test_ratio), replace=False)
+
+	test_df = df[df['smiles'].isin(test_smiles)].reset_index(drop=True)
+	train_df = df[~df['smiles'].isin(test_smiles)].reset_index(drop=True)
+
+	return test_df, train_df
+
+
 def random_split(suppl, smiles_list, test_ratio=0.1):
 	test_smiles = np.random.choice(smiles_list, int(len(smiles_list)*test_ratio), replace=False)
 
@@ -156,6 +166,7 @@ if __name__ == "__main__":
 						help='dataset name')
 	parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
 						help='path to configuration')
+
 	args = parser.parse_args()
 	
 	if 'metlin' in args.dataset: 
@@ -276,13 +287,10 @@ if __name__ == "__main__":
 		print('\n>>> Step 2: filter out invalid molecules; randomly split SMILES into training and test sets;')
 		df['valid'] = df['smiles'].apply(
 			lambda x: check_atom(x, config['increase_mitochondrial_dysfunction'], in_type='smiles'))
-		df = df[df['valid'] == True]
+		df = df[df['valid'] == True].reset_index(drop=True)
 
-		test_ratio = 0.2
-		df = df.sample(frac=1).reset_index(drop=True)  # Shuffle dataset
-		test_size = int(len(df) * test_ratio)
-		test_df = df.iloc[:test_size]
-		train_df = df.iloc[test_size:]
+		test_df, train_df = random_split_df(df, test_ratio=0.2)
+
 		print('Get {} test data and {} training data'.format(len(test_df), len(train_df)))
 
 		print('\n>>> Step 3: encode all the data into pkl format;')
@@ -300,5 +308,23 @@ if __name__ == "__main__":
 			pickle.dump(train_data, f)
 			print('Save {}'.format(out_path))
 
+	# if 'increase_mitochondrial_dysfunction' in args.dataset:
+	# 	print('\n>>> Step 1: load the dataset;')
+	# 	df = pd.read_csv(os.path.join(args.raw_dir, 'increase_mitochondrial_dysfunction.csv'))
+	# 	df = df.dropna(subset=['smiles', 'labels'])
+	# 	print('Load {} data from Increase Mitochondrial Dysfunction Dataset...'.format(len(df)))
+	#
+	# 	print('\n>>> Step 2: filter out invalid molecules;')
+	# 	df['valid'] = df['smiles'].apply(
+	# 		lambda x: check_atom(x, config['increase_mitochondrial_dysfunction'], in_type='smiles'))
+	# 	df = df[df['valid'] == True].reset_index(drop=True)
+	#
+	# 	print('\n>>> Step 3: encode entire dataset into pkl format;')
+	# 	full_data = csv2arr(df, config['encoding'])
+	# 	out_path = os.path.join(args.pkl_dir, 'increase_mitochondrial_dysfunction_{}_all.pkl'.format(
+	# 		config['encoding']['conf_type']))
+	# 	with open(out_path, 'wb') as f:
+	# 		pickle.dump(full_data, f)
+	# 		print('✅ Saved full dataset to {}'.format(out_path))
 
 
