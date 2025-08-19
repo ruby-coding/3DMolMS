@@ -116,9 +116,7 @@ class MolTox_LLMDataset(Dataset):
 		return len(self.data)
 
 	def __getitem__(self, idx):
-		rec = self.data[idx]
-		return rec['title'], rec['features'], rec['mol'], rec['label']
-		#return self.data[idx]['title'], self.data[idx]['mol'], self.data[idx]['features'], self.data[idx]['label']
+		return self.data[idx]['title'], self.data[idx]['mol'], self.data[idx]['label']
 
 class MolTox_Dataset(Dataset):
 	def __init__(self, path):
@@ -129,13 +127,15 @@ class MolTox_Dataset(Dataset):
 	def __len__(self):
 		return len(self.data)
 
+	# def __getitem__(self, idx):
+	# 	rec = self.data[idx]
+	# 	return self.data[idx]['title'], self.data[idx]['mol'], self.data[idx]['features'], self.data[idx]['label']
+
 	def __getitem__(self, idx):
-		rec = self.data[idx]
-		return self.data[idx]['title'], self.data[idx]['mol'], self.data[idx]['features'], self.data[idx]['label']
+		return self.data[idx]['title'], self.data[idx]['mol'], self.data[idx]['label'], self.data[idx]['mol_meta']
 
 
-
-class MolCCS_Dataset(Dataset): 
+class MolCCS_Dataset(Dataset):
 	def __init__(self, path): 
 		with open(path, 'rb') as file: 
 			self.data = pickle.load(file)

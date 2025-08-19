@@ -140,6 +140,14 @@ metlin_rt:
   max_atom_num: 300
   min_atom_num: 10
 
+# mito_dys_mollama ===============================================================
+mollama:
+  atom_type: ['C', 'O', 'N', 'H', 'P', 'S', 'F', 'Cl', 'B', 'Br', 'I']
+  max_atom_num: 300
+  min_atom_num: 3
+  embedding_dim: 2048
+  use_precomputed: true
+
 # collision cross section =======================================================
 allccs:
   atom_type: ['C', 'O', 'N', 'H', 'P', 'S', 'F', 'Cl', 'B', 'Br', 'I']

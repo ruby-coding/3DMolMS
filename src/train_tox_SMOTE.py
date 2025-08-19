@@ -4,6 +4,7 @@ LastEditors: yuhhong
 LastEditTime: 2023-10-20 17:16:17
 '''
 import os
+
 os.environ["SCIPY_ARRAY_API"] = "1"
 import argparse
 import sys
@@ -21,9 +22,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, matthews_corrcoef, confusion_matrix
 
-from molnetpack import MoLlamaToxClassifier
+from molnetpack import MolnetTox_bin
 from molnetpack import MolTox_Dataset
-
 
 
 def get_lr(optimizer):
@@ -168,15 +168,15 @@ def init_random_seed(seed):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Molecular Retention Time Prediction (Train)')
-    parser.add_argument('--train_data', type=str, default='./data/mito_mollama_train.pkl',
+    parser.add_argument('--train_data', type=str, default='./data/incr_mito_dys_train2.pkl',
                         help='path to training data (pkl)')
-    parser.add_argument('--test_data', type=str, default='./data/mito_mollama_test.pkl',
+    parser.add_argument('--test_data', type=str, default='./data/incr_mito_dys_test2.pkl',
                         help='path to test data (pkl)')
     parser.add_argument('--model_config_path', type=str, default='./src/molnetpack/config/molnet_rt.yml',
                         help='path to model and training configuration')
     parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
                         help='path to configuration')
-    parser.add_argument('--checkpoint_path', type=str, default='./check_point/(0618)mito_mollama.pt',
+    parser.add_argument('--checkpoint_path', type=str, default='./check_point/(0801)mito_3DMOl.pt',
                         help='Path to save checkpoint')
     parser.add_argument('--resume_path', type=str, default='',
                         help='Path to pretrained model')
@@ -186,9 +186,9 @@ if __name__ == "__main__":
                         help='Path to export the whole model (structure & weights)')
     parser.add_argument('--validation_only', action='store_true',
                         help='Run validation only without training')
-    parser.add_argument('--plot', type=str, default='./plots',
+    parser.add_argument('--plot', type=str, default='./plots/(0801)mito_3DMOl.png',
                         help='Directory to save the plot')
-    parser.add_argument('--plot_confusion_matrix', type=str, default='./plots/confusion_matrix',
+    parser.add_argument('--plot_confusion_matrix', type=str, default='./plots/confusion_matrix/(0801)mito_3DMOl.png',
                         help='Path to save the confusion matrix plot')
     parser.add_argument('--eval_only', action='store_true', help="Only evaluate the model without training")
     parser.add_argument('--eval_only_train', action='store_true', help="Only evaluate the model without training")
@@ -274,7 +274,7 @@ if __name__ == "__main__":
         "cuda:" + str(args.device)) if torch.cuda.is_available() and not args.no_cuda else torch.device("cpu")
     print(f'Device: {device}')
 
-    model = MoLlamaToxClassifier(config['model']).to(device)
+    model = MolnetTox_bin(config['model']).to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f'{str(model)} #Params: {num_params}')
 
@@ -331,7 +331,7 @@ if __name__ == "__main__":
         print(f"Device: {device}")
 
         # Load model
-        model = MoLlamaToxClassifier(config['model']).to(device)
+        model = MolnetTox_bin(config['model']).to(device)
         checkpoint = torch.load(args.checkpoint_path, map_location=device)
         model.load_state_dict(checkpoint['model_state_dict'])
         model.eval()
@@ -388,8 +388,9 @@ if __name__ == "__main__":
 
     # 3. Optimizer & Scheduler
     optimizer = optim.AdamW(model.parameters(), lr=config['train']['lr'])
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5,
-                                                     patience=10)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=3, min_lr=1e-6
+    )
 
     # 4. Train
     if args.resume_path != '':
