@@ -183,13 +183,38 @@ def mollama2arr(df, encoder):
         })
     return data
 
+def msmollama2arr(df, encoder):
+    '''Data format (matches your style):
+    [
+        {'title': <str>, 'mol': <numpy array>, 'label': <numpy array>, 'mol_meta': <numpy array>},
+        ...
+    ]
+    '''
+    data = []
+    for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
+        # Extract precomputed embedding (2048-d)
+        embedding = row[[f'molembed{i}' for i in range(2048)]].values.astype(np.float32)
+
+        # Calculate molecular metadata (like in csv2arr)
+        mol = Chem.MolFromSmiles(row['smiles'])
+        mol_mass = Descriptors.MolWt(mol) if mol else 0.0
+        total_atomic_num = sum(atom.GetAtomicNum() for atom in mol.GetAtoms()) if mol else 0
+        mol_meta = np.array([mol_mass, total_atomic_num])
+
+        data.append({
+            'title': f"Mol_{idx}",  # Consistent with your naming
+            'mol': embedding,  # 2048-d vector instead of conformation
+            'mol_meta': mol_meta  # Same format as other datasets
+        })
+    return data
+
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(description='Preprocess the Data')
     parser.add_argument('--raw_dir', type=str, default='./data/origin/',
                         help='path to raw data')
     parser.add_argument('--pkl_dir', type=str, default='./data/',
                         help='path to pkl data')
-    parser.add_argument('--dataset', type=str, nargs='+', required=True, choices=['metlin', 'allccs', 'cardio_toxicity','increase_mitochondrial_dysfunction', 'mollama'],
+    parser.add_argument('--dataset', type=str, nargs='+', required=True, choices=['metlin', 'allccs', 'cardio_toxicity','increase_mitochondrial_dysfunction', 'mollama','msmollama'],
                         help='dataset name')
     parser.add_argument('--data_config_path', type=str, default='./src/molnetpack/config/preprocess_etkdgv3.yml',
                         help='path to configuration')
@@ -206,6 +231,8 @@ if __name__ == "__main__":
         assert os.path.exists(os.path.join(args.raw_dir, 'increase_mitochondrial_dysfunction.csv'))
     if 'mollama' in args.dataset:
         assert os.path.exists(os.path.join(args.raw_dir, 'mito_dys_mollama.csv'))
+    if 'msmollama' in args.dataset:
+        assert os.path.exists(os.path.join(args.raw_dir, 'output_llmms.csv'))
 
     # load the configurations
     with open(args.data_config_path, 'r') as f:
@@ -370,6 +397,45 @@ if __name__ == "__main__":
         # Save train data
         train_data = mollama2arr(train_df, config['encoding'])
         out_path = os.path.join(args.pkl_dir, 'mollama_{}_train.pkl'.format(
+            config['encoding']['conf_type']))
+        with open(out_path, 'wb') as f:
+            pickle.dump(train_data, f)
+            print('Save {}'.format(out_path))
+
+    if 'msmollama' in args.dataset:
+        # 1. Load data
+        print('\n>>> Step 1: load the dataset;')
+        df = pd.read_csv(os.path.join(args.raw_dir, 'output_llmms.csv'))
+        df = df.dropna(subset=['smiles', 'mol_id'])
+        print('Load {} data from MoLlama Dataset...'.format(len(df)))
+
+        # 2. Filter and split data
+        print('\n>>> Step 2: filter out invalid molecules; randomly split into training and test sets;')
+        df['valid'] = df['smiles'].apply(
+            lambda x: check_atom(x, config['mollama'], in_type='smiles'))
+        valid_df = df[df['valid'] == True].reset_index(drop=True)
+        num_removed = len(df) - len(valid_df)
+        print(f"Number of rows removed due to invalid atoms: {num_removed}")
+        # Get unique SMILES for splitting (like METLIN)
+        unique_smiles = list(set(valid_df['smiles'].tolist()))
+        test_df, train_df = random_split_df(valid_df,
+                                            test_ratio=0.2)
+        print('Get {} test data and {} training data'.format(len(test_df), len(train_df)))
+
+        # 3. Encode data into arrays
+        print('\n>>> Step 3: encode all the data into pkl format;')
+
+        # Save test data
+        test_data = msmollama2arr(test_df, config['encoding'])
+        out_path = os.path.join(args.pkl_dir, 'msmollama_{}_test.pkl'.format(
+            config['encoding']['conf_type']))
+        with open(out_path, 'wb') as f:
+            pickle.dump(test_data, f)
+            print('Save {}'.format(out_path))
+
+        # Save train data
+        train_data = msmollama2arr(train_df, config['encoding'])
+        out_path = os.path.join(args.pkl_dir, 'msmollama_{}_train.pkl'.format(
             config['encoding']['conf_type']))
         with open(out_path, 'wb') as f:
             pickle.dump(train_data, f)

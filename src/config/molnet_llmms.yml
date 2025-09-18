@@ -1,0 +1,24 @@
+model:
+  in_dim: 2048
+  add_num: 0
+  max_atom_num: 1
+  resolution: 0.2
+  max_mz: 1500
+  batch_size: 64
+  emb_dim: 2048
+  k: 5
+  dropout: 0.2
+  encode_layers: [2048, 1024, 512, 256, 128]
+  decode_layers: [128, 256, 512, 1024, 2048]
+
+train:
+  epochs: 200
+  batch_size: 64
+  num_workers: 0
+  lr: 0.001
+
+test: 
+  local_path_qtof: './check_point/molnet_qtof_etkdgv3.pt'
+  local_path_orbitrap: './check_point/molnet_orbitrap_etkdgv3.pt'
+  github_release_url_qtof: 'https://github.com/JosieHong/3DMolMS/releases/download/v1.2.0/molnet_qtof_etkdgv3.zip'
+  github_release_url_orbitrap: 'https://github.com/JosieHong/3DMolMS/releases/download/v1.2.0/molnet_orbitrap_etkdgv3.zip'

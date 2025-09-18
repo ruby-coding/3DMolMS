@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from molnetpack import MolNet_MS
+from molnetpack import MolNet_MS, MolNet_LLMMS
 from molnetpack import MolMS_Dataset
 from molnetpack import __version__
 

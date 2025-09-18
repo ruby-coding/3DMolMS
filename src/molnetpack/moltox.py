@@ -62,10 +62,10 @@ class MolnetTox_bin(nn.Module):
 							   layers=config['encode_layers'],
 							   emb_dim=int(config['emb_dim']),
 							   k=int(config['k']))
-		self.decoder = MSDecoder(in_dim=int(config['emb_dim'] + config['add_num']),
-								 layers=config['decode_layers'],
-								 out_dim=3,
-								 dropout=config['dropout'])
+		self.decoder = LLMMSDecoder(in_dim=int(config['emb_dim'] + config['add_num']),
+									layers=config['decode_layers'],
+									out_dim=3,
+									dropout=config['dropout'])
 
 		self.classifier = nn.Linear(3, 1)
 
@@ -151,5 +151,135 @@ class MolNet_LLM(nn.Module):
 			x = layer(x)
 		out = self.output(x)  # Shape: (B, 1), raw logit
 		return out
+
+
+# ----------------------------------------------------------------------
+class FCResBlock(nn.Module):
+	"""Fully Connected Residual Block"""
+
+	def __init__(self, in_dim, out_dim, dropout=0.0):
+		super(FCResBlock, self).__init__()
+		self.fc1 = nn.Linear(in_dim, out_dim)
+		self.fc2 = nn.Linear(out_dim, out_dim)
+		self.dropout = nn.Dropout(dropout)
+		self.relu = nn.ReLU()
+
+		# Residual connection
+		self.residual = nn.Linear(in_dim, out_dim) if in_dim != out_dim else nn.Identity()
+
+	def forward(self, x):
+		residual = self.residual(x)
+		out = self.fc1(x)
+		out = self.relu(out)
+		out = self.dropout(out)
+		out = self.fc2(out)
+		out = out + residual
+		return self.relu(out)
+
+
+# ----------------------------------------------------------------------
+class LLMMSEncoder(nn.Module):
+	"""MS-Specific encoder for compressing MoLlama embeddings"""
+
+	def __init__(self, in_dim, layers, emb_dim, dropout=0.1):
+		super(LLMMSEncoder, self).__init__()
+
+		# Build encoder blocks
+		self.blocks = nn.ModuleList()
+		prev_dim = in_dim
+
+		for layer_dim in layers:
+			self.blocks.append(FCResBlock(in_dim=prev_dim, out_dim=layer_dim, dropout=dropout))
+			prev_dim = layer_dim
+
+		# Final embedding layer
+		self.fc_emb = nn.Linear(prev_dim, emb_dim)
+
+	def forward(self, x):
+		for block in self.blocks:
+			x = block(x)
+		x = self.fc_emb(x)
+		return x
+
+
+# ----------------------------------------------------------------------
+class LLMMSDecoder(nn.Module):
+	"""MS Decoder for MS spectrum prediction"""
+
+	def __init__(self, in_dim, layers, out_dim, dropout):
+		super(LLMMSDecoder, self).__init__()
+		self.blocks = nn.ModuleList([FCResBlock(in_dim=in_dim, out_dim=layers[0])])
+		for i in range(len(layers) - 1):
+			if len(layers) - i > 3:
+				self.blocks.append(FCResBlock(in_dim=layers[i], out_dim=layers[i + 1]))
+			else:
+				self.blocks.append(FCResBlock(in_dim=layers[i], out_dim=layers[i + 1], dropout=dropout))
+		self.fc = nn.Linear(layers[-1], out_dim)
+
+	def forward(self, x):
+		for block in self.blocks:
+			x = block(x)
+		return self.fc(x)
+
+
+# ----------------------------------------------------------------------
+class MolNet_MS(nn.Module):
+	"""MS prediction model using MoLlama embeddings"""
+
+	def __init__(self, config):
+		super(MolNet_MS, self).__init__()
+
+		self.add_num = config.get('add_num', 0)
+
+		# MS-specific encoder for MoLlama embeddings
+		self.encoder = LLMMSEncoder(
+			in_dim=int(config['in_dim']),
+			layers=config['encode_layers'],
+			emb_dim=int(config['emb_dim']),
+			dropout=config['dropout']
+		)
+
+		# Decoder for MS spectrum prediction
+		decoder_in_dim = int(config['emb_dim']) + self.add_num
+		self.decoder = LLMMSDecoder(
+			in_dim=decoder_in_dim,
+			layers=config['decode_layers'],
+			out_dim=int(config['out_dim']),
+			dropout=config['dropout']
+		)
+
+		# Weight initialization
+		for m in self.modules():
+			if isinstance(m, nn.Linear):
+				m.weight.data.normal_(mean=0.0, std=0.02)
+				if m.bias is not None:
+					m.bias.data.zero_()
+
+	def forward(self, x, env=None):
+		"""
+        Args:
+            x: MoLlama embeddings, torch.Size([batch_size, in_dim])
+            env: Environmental/experimental conditions, torch.Size([batch_size, add_num])
+        Returns:
+            ms_spectrum: Predicted MS spectrum
+            latent: MS-specific latent features
+        """
+		# Encode MoLlama embeddings to MS-specific latent space
+		latent = self.encoder(x)
+
+		# Add experimental conditions if provided
+		decoder_input = latent
+		if self.add_num > 0 and env is not None:
+			if self.add_num == 1:
+				decoder_input = torch.cat((latent, env.unsqueeze(1)), dim=1)
+			else:
+				decoder_input = torch.cat((latent, env), dim=1)
+
+		# Decode to MS spectrum
+		ms_spectrum = self.decoder(decoder_input)
+
+		return ms_spectrum
+
+
 
 
